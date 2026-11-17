@@ -1,0 +1,33 @@
+@namespace MediaStudio.App.Components
+<label>Authoring model
+    <select data-authoring-model data-selected-model="@Selected" value="@Selected" disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)" @onchange="Select">
+        <option value="">@(Workspace.AuthorConfigured && Workspace.Providers.State.Authoring is null ? Workspace.ProviderMode : "Launch-configured Copilot / direct editing")</option>
+        @if (Workspace.RoutedAuthoringAvailable)
+        { <option value="routed">Settings routing · @Workspace.RouteLabel</option> }
+        @foreach (var connection in Workspace.Providers.State.Connections)
+        {
+            @foreach (var model in connection.ChatModels ?? [])
+            {
+                <option value="@(connection.Id + "|" + model)">@model @(Workspace.Providers.State.General == new ModelSelection(connection.Id, model) ? "(quick tasks)" : "")</option>
+            }
+        }
+    </select>
+</label>
+@code {
+    [Parameter, EditorRequired] public MediaWorkspace Workspace { get; set; } = null!;
+    string Selected => Workspace.Providers.State.RoutedAuthoring ? "routed"
+        : Workspace.Providers.State.Authoring is { } model ? model.Connection + "|" + model.Model : "";
+    async Task Select(ChangeEventArgs args)
+    {
+        try
+        {
+            Workspace.Error = null;
+            var value = args.Value?.ToString() ?? "";
+            if (value == "routed") { await Workspace.SelectRoutedAuthoringAsync(); return; }
+            var parts = value.Split('|');
+            await Workspace.SelectAuthoringModelAsync(value.Length == 0 ? null :
+                parts.Length == 2 ? new(parts[0], parts[1]) : throw new InvalidOperationException("Choose an exact configured authoring deployment."));
+        }
+        catch (Exception error) { Workspace.Error = error.Message; }
+    }
+}

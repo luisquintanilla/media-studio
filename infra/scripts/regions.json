@@ -1,0 +1,45 @@
+{
+  "$comment": "Static region tables for capabilities that `az cognitiveservices model list` cannot report. Copied from Microsoft Learn; re-verify when the pages change. Used by Find-FoundryRegion.ps1. 'required' capabilities block provisioning; 'advisory' ones only lower the region score because the app has a local/alternate fallback.",
+  "retrieved": "2026-11-16",
+  "candidates": [ "eastus2", "eastus", "swedencentral", "westus3", "northcentralus", "australiaeast", "japaneast", "uksouth" ],
+  "capabilities": {
+    "maiVoices": {
+      "label": "MAI voices",
+      "fallback": "MAI-Voice is also routed globally; otherwise the app uses Kokoro (local) or the optional OpenAI tts deployment.",
+      "sources": [
+        "https://learn.microsoft.com/azure/ai-services/speech-service/regions?tabs=tts",
+        "https://learn.microsoft.com/azure/ai-services/speech-service/mai-voices"
+      ],
+      "regions": [ "canadacentral", "centralindia", "eastasia", "eastus", "eastus2", "francecentral", "japaneast", "northeurope", "southeastasia", "swedencentral", "westeurope", "westus", "westus2", "westus3" ]
+    },
+    "maiTranscribe": {
+      "label": "MAI-Transcribe",
+      "fallback": "Whisper (local) or the optional OpenAI transcribe deployment (deployOpenAIAudio=true).",
+      "sources": [ "https://learn.microsoft.com/azure/ai-services/speech-service/regions?tabs=llmspeech" ],
+      "regions": [ "centralindia", "eastus", "northeurope", "southeastasia", "westeurope", "westus", "westus2" ]
+    },
+    "decisions": {
+      "label": "Decisions",
+      "fallback": "Julia (local) or the heuristic decider.",
+      "sources": [ "https://learn.microsoft.com/azure/foundry/openai/how-to/decisions" ],
+      "requiresModel": "gpt-6-luna",
+      "excludedRegions": [ "eastus2" ]
+    },
+    "contentUnderstanding": {
+      "label": "Content Understanding",
+      "fallback": "PdfPig, VLM, Document Intelligence or Mistral OCR document paths.",
+      "sources": [ "https://learn.microsoft.com/azure/ai-services/content-understanding/language-region-support" ],
+      "regions": [ "australiaeast", "canadacentral", "eastus", "eastus2", "japaneast", "southcentralus", "southeastasia", "swedencentral", "uksouth", "westeurope", "westus", "westus3" ]
+    },
+    "documentIntelligence": {
+      "label": "Document Intelligence",
+      "fallback": "PdfPig, VLM, Content Understanding or Mistral OCR document paths.",
+      "sources": [
+        "https://learn.microsoft.com/azure/ai-services/document-intelligence/overview",
+        "https://azure.microsoft.com/explore/global-infrastructure/products-by-region/"
+      ],
+      "note": "Document Intelligence v4.0 is available in every candidate region; for other regions check products-by-region and add them here.",
+      "regions": [ "australiaeast", "eastus", "eastus2", "japaneast", "northcentralus", "swedencentral", "uksouth", "westus3" ]
+    }
+  }
+}

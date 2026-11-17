@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+# Infra only: one Foundry (AIServices) account + project + pay-per-use model deployments.
+#   azd up            provision (preprovision checks the region; postprovision runs `configure azd`)
+#   azd down --purge  teardown (purge frees the soft-deleted account and its quota)
+name: media-studio
+metadata:
+  template: media-studio@1.0.0
+infra:
+  provider: bicep
+  path: infra
+hooks:
+  preprovision:
+    windows:
+      shell: pwsh
+      run: infra/hooks/preprovision.ps1
+      interactive: true
+      continueOnError: false
+    posix:
+      shell: sh
+      run: infra/hooks/preprovision.sh
+      interactive: true
+      continueOnError: false
+  postprovision:
+    windows:
+      shell: pwsh
+      run: infra/hooks/postprovision.ps1
+      interactive: true
+      continueOnError: false
+    posix:
+      shell: sh
+      run: infra/hooks/postprovision.sh
+      interactive: true
+      continueOnError: false

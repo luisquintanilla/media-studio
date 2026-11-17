@@ -1,0 +1,28 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MediaStudio.App/MediaStudio.App.csproj" />
+    <Project Path="src/MediaStudio.Agents/MediaStudio.Agents.csproj" />
+    <Project Path="src/MediaStudio.Configuration/MediaStudio.Configuration.csproj" />
+    <Project Path="src/MediaStudio.Sources/MediaStudio.Sources.csproj" />
+    <Project Path="src/VideoProduction.AgentFramework/VideoProduction.AgentFramework.csproj" />
+    <Project Path="src/VideoProduction.Cli/VideoProduction.Cli.csproj" />
+    <Project Path="src/VideoProduction.Core/VideoProduction.Core.csproj" />
+    <Project Path="src/VideoProduction.Decisions/VideoProduction.Decisions.csproj" />
+    <Project Path="src/VideoProduction.Providers/VideoProduction.Providers.csproj" />
+    <Project Path="src/VideoStudio.Contracts/VideoStudio.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/audio/">
+    <Project Path="src/Media.Narration/Media.Narration.csproj" />
+    <Project Path="src/Media.Audio/Media.Audio.csproj" />
+    <Project Path="src/MediaStudio.Speech/MediaStudio.Speech.csproj" />
+    <Project Path="src/AudioTranscriber/AudioTranscriber.csproj" />
+    <Project Path="src/audio-transcriber/audio-transcriber.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MediaStudio.Tests/MediaStudio.Tests.csproj" />
+    <Project Path="tests/AudioTranscriber.Tests/AudioTranscriber.Tests.csproj" />
+    <Project Path="tests/VideoProduction.Decisions.Tests/VideoProduction.Decisions.Tests.csproj" />
+    <Project Path="tests/VideoProduction.Tests/VideoProduction.Tests.csproj" />
+    <Project Path="tests/VideoProduction.Visual.Tests/VideoProduction.Visual.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,12 @@
+@namespace MediaStudio.App.Components
+<div class="studio-markdown">@((Microsoft.AspNetCore.Components.MarkupString)html)</div>
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+    string html = "", previous = "";
+    protected override void OnParametersSet()
+    {
+        if (Text == previous) return;
+        previous = Text;
+        html = AuthorMarkdown.Render(Text);
+    }
+}

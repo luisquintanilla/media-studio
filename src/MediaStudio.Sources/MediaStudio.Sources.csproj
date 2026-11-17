@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="VideoProduction.Mcp.Tests" />
+    <InternalsVisibleTo Include="MediaStudio.Tests" />
+    <PackageReference Include="CommunityToolkit.DocumentExtraction.PdfPig" />
+    <PackageReference Include="CommunityToolkit.DocumentExtraction.VisionLanguageModel" />
+    <PackageReference Include="CommunityToolkit.DocumentExtraction.Mistral" />
+    <PackageReference Include="CommunityToolkit.DocumentExtraction.AzureDocumentIntelligence" />
+    <PackageReference Include="CommunityToolkit.DocumentExtraction.AzureContentUnderstanding" />
+    <PackageReference Include="Microsoft.Extensions.DocumentExtraction" />
+    <PackageReference Include="Microsoft.Extensions.DataIngestion" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" />
+    <PackageReference Include="Microsoft.ML.Tokenizers.Data.Cl100kBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MediaStudio.Configuration\MediaStudio.Configuration.csproj" />
+    <ProjectReference Include="..\VideoProduction.Decisions\VideoProduction.Decisions.csproj" />
+  </ItemGroup>
+</Project>

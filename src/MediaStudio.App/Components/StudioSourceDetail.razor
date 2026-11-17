@@ -1,0 +1,58 @@
+@namespace MediaStudio.App.Components
+@using MediaStudio.Sources
+@using System.Text.Json
+@if (Source.Provenance is { } provenance)
+{
+    <p data-source-provenance>@provenance.Attribution<br />@provenance.Changes</p>
+    <p class="muted">Author-supplied original-page map: @string.Join(", ", provenance.OriginalPages). Origin metadata is attribution, not an independently verified scientific claim.</p>
+}
+<details><summary>Images and structured extraction</summary>
+    <p data-source-structure-counts>@Flatten(Source.Projection.Elements).Count(e => e.Image is not null) inline image payload(s) · @Flatten(Source.Projection.Elements).Count(e => e.Cells is { Length: > 0 }) addressed table(s). Literal Markdown tables, when returned, remain in extracted text.</p>
+    <p class="muted">Inline payloads are actual extracted or attached bytes. Captions alone are not image payloads. Diagram interpretation is a separate explicit vision read; geometry is not confidence.</p>
+    @foreach (var element in Flatten(Source.Projection.Elements))
+    {
+        @if (element.Image is { } image)
+        {
+            <figure data-source-image><img style="max-width:100%;height:auto;background:white" src="@($"data:{image.MediaType};base64,{image.Base64}")" alt="@(element.AlternativeText ?? "Actual source image payload; not a generated illustration")" />
+                <figcaption>@(element.AlternativeText ?? "Source image payload")</figcaption></figure>
+        }
+        @if (element.Cells is { Length: > 0 } cells)
+        {
+            <p data-source-table>Structured table: @element.Rows rows, @element.Columns columns (including spans).</p>
+            <pre>@string.Join("\n", cells.Select(c => $"[{c.Row},{c.Column}] ({c.RowSpan}x{c.ColumnSpan}) {c.Content?.Text}"))</pre>
+        }
+    }
+</details>
+<details><summary>Attribute an excerpt or source crop</summary>
+    <p class="muted">Paste provenance JSON with originalDocumentSha256, origin, attribution, changes and originalPages in attached-page order. This creates a new immutable source identity, clears old citations and maps extracted pages; it neither uploads nor verifies the parent document.</p>
+    <textarea data-source-attribution aria-label="Source provenance JSON" @bind="provenanceJson"></textarea>
+    <button data-apply-attribution disabled="@(Workspace.Busy || Workspace.SourcesBusy)" @onclick="Attribute">Apply attribution and page map</button>
+</details>
+@code {
+    [Parameter, EditorRequired] public MediaWorkspace Workspace { get; set; } = null!;
+    [Parameter, EditorRequired] public DocumentSource Source { get; set; } = null!;
+    string provenanceJson = "";
+    static IEnumerable<SourceElement> Flatten(IEnumerable<SourceElement> elements)
+    {
+        foreach (var element in elements)
+        {
+            yield return element;
+            foreach (var child in Flatten(element.Children)) { yield return child; }
+            foreach (var cell in element.Cells ?? [])
+                if (cell.Content is { } content)
+                    foreach (var child in Flatten([content])) { yield return child; }
+        }
+    }
+    async Task Attribute()
+    {
+        try
+        {
+            Workspace.Error = null;
+            if (provenanceJson.Length > 8192) throw new SourceException("source.provenance", "Provenance JSON exceeds 8192 characters.");
+            var provenance = JsonSerializer.Deserialize<SourceProvenance>(provenanceJson, SourceJson.Options)
+                ?? throw new SourceException("source.provenance", "Supply provenance JSON.");
+            await Workspace.AttributeSourceAsync(Source.Id, provenance);
+        }
+        catch (Exception error) { Workspace.Error = error.Message; }
+    }
+}

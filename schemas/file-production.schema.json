@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit file-oriented Video Studio contracts v1",
+  "description": "Inert local files, not a queue, automatic resume protocol or authorization to execute unreviewed content. Domain validation additionally enforces hashes, identities, immutable submissions and cross-process ownership.",
+  "oneOf": [
+    { "$ref": "#/$defs/reviewedRequest" }, { "$ref": "#/$defs/configuration" },
+    { "$ref": "#/$defs/draftStart" }, { "$ref": "#/$defs/draftEdit" },
+    { "$ref": "#/$defs/draftSnapshot" }, { "$ref": "#/$defs/draftFork" },
+    { "$ref": "#/$defs/status" }, { "$ref": "#/$defs/manifest" },
+    { "$ref": "#/$defs/attempt" }, { "$ref": "#/$defs/cancellation" },
+    { "$ref": "#/$defs/draftState" }
+  ],
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "operationId": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}$" },
+    "attemptId": { "type": "string", "pattern": "^attempt-[a-f0-9]{32}$" },
+    "draftId": { "type": "string", "pattern": "^draft-[a-f0-9]{32}$" },
+    "constraints": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "maxDurationSeconds": { "type": "integer", "minimum": 5, "maximum": 300, "default": 180 },
+        "maxScenes": { "type": "integer", "minimum": 1, "maximum": 12, "default": 6 }
+      }
+    },
+    "request": {
+      "type": "object", "additionalProperties": false, "required": ["prompt", "constraints", "plan"],
+      "properties": {
+        "prompt": { "type": "string", "minLength": 1, "maxLength": 6000 },
+        "constraints": { "$ref": "#/$defs/constraints" },
+        "plan": { "$ref": "video-outline.schema.json" }
+      }
+    },
+    "draftBinding": {
+      "type": "object", "additionalProperties": false, "required": ["draftId", "revision", "contentSha256"],
+      "properties": {
+        "draftId": { "$ref": "#/$defs/draftId" }, "revision": { "type": "integer", "minimum": 1 },
+        "contentSha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "reviewedRequest": {
+      "type": "object", "additionalProperties": false, "required": ["schemaVersion", "idempotencyKey", "request"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "idempotencyKey": { "$ref": "#/$defs/operationId" },
+        "request": { "$ref": "#/$defs/request" },
+        "draft": { "oneOf": [{ "$ref": "#/$defs/draftBinding" }, { "type": "null" }] }
+      }
+    },
+    "generation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["toolsFile", "fontFile", "fontSha256", "fontLicenseFile", "fontLicenseSha256"],
+      "properties": {
+        "toolsFile": { "type": "string", "minLength": 1 }, "fontFile": { "type": "string", "minLength": 1 },
+        "fontSha256": { "$ref": "#/$defs/hash" }, "fontLicenseFile": { "type": "string", "minLength": 1 },
+        "fontLicenseSha256": { "$ref": "#/$defs/hash" }, "transcriberConfigFile": { "type": ["string", "null"] },
+        "transcriptDecisionFile": { "type": ["string", "null"] },
+        "frozenNarration": {
+          "oneOf": [{ "type": "null" }, {
+            "type": "object", "additionalProperties": false, "required": ["projectFile", "projectSha256"],
+            "properties": { "projectFile": { "type": "string", "minLength": 1 }, "projectSha256": { "$ref": "#/$defs/hash" } }
+          }]
+        },
+        "narrationPolicy": { "$ref": "project.schema.json#/$defs/narrationPolicy" },
+        "importedVisuals": {
+          "type": "array", "minItems": 1, "maxItems": 12,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["sceneId", "file", "sha256", "provenance", "license"],
+            "properties": {
+              "sceneId": { "type": "string", "pattern": "^scene-[0-9]{2}$" },
+              "file": { "type": "string", "minLength": 1 },
+              "sha256": { "$ref": "#/$defs/hash" },
+              "provenance": { "type": "string", "minLength": 1, "maxLength": 4096 },
+              "license": { "type": "string", "minLength": 1, "maxLength": 4096 },
+              "allowHold": { "type": "boolean", "default": false }
+            }
+          }
+        }
+      }
+    },
+    "configuration": {
+      "type": "object", "additionalProperties": false, "required": ["schemaVersion", "stateRoot", "generation"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "stateRoot": { "type": "string", "minLength": 1 },
+        "generation": { "$ref": "#/$defs/generation" }
+      }
+    },
+    "draftContent": {
+      "type": "object", "additionalProperties": false, "required": ["prompt", "audience", "outcome", "constraints", "storyboard"],
+      "properties": {
+        "prompt": { "type": "string", "minLength": 1, "maxLength": 6000 },
+        "audience": { "type": "string", "maxLength": 2000 }, "outcome": { "type": "string", "maxLength": 2000 },
+        "constraints": { "$ref": "#/$defs/constraints" },
+        "storyboard": { "oneOf": [{ "$ref": "video-outline.schema.json" }, { "type": "null" }] }
+      }
+    },
+    "draftStart": {
+      "type": "object", "additionalProperties": false, "required": ["schemaVersion", "operationId", "content"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "operationId": { "$ref": "#/$defs/operationId" },
+        "content": { "$ref": "#/$defs/draftContent" }
+      }
+    },
+    "draftEdit": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "draftId", "revision", "operationId", "kind"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "draftId": { "$ref": "#/$defs/draftId" },
+        "revision": { "type": "integer", "minimum": 1 }, "operationId": { "$ref": "#/$defs/operationId" },
+        "kind": { "enum": ["set-prompt", "set-audience", "set-outcome", "set-duration-seconds", "set-scene-limit", "replace-storyboard", "replace-content"] },
+        "value": { "type": ["string", "null"] }, "number": { "type": ["integer", "null"] },
+        "storyboard": { "oneOf": [{ "$ref": "video-outline.schema.json" }, { "type": "null" }] },
+        "content": { "$ref": "#/$defs/draftContent" }
+      },
+      "description": "Runtime requires exactly one correctly typed non-null payload for the chosen kind. Numeric edits preserve storyboard/narration; prompt replacement invalidates the storyboard explicitly. replace-content atomically replaces the complete validated brief and optional storyboard at the exact revision."
+    },
+    "draftSnapshot": {
+      "type": "object", "additionalProperties": false, "required": ["schemaVersion", "draftId", "revision"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "draftId": { "$ref": "#/$defs/draftId" },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "draftFork": {
+      "type": "object", "additionalProperties": false, "required": ["schemaVersion", "draftId", "revision", "operationId"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "draftId": { "$ref": "#/$defs/draftId" },
+        "revision": { "type": "integer", "minimum": 1 }, "operationId": { "$ref": "#/$defs/operationId" }
+      }
+    },
+    "draftOperation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operationId", "payloadSha256", "revision", "kind"],
+      "properties": {
+        "operationId": { "$ref": "#/$defs/operationId" }, "payloadSha256": { "$ref": "#/$defs/hash" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "kind": { "enum": ["start", "fork", "submit", "set-prompt", "set-audience", "set-outcome", "set-duration-seconds", "set-scene-limit", "replace-storyboard", "replace-content"] }
+      }
+    },
+    "draftSubmission": {
+      "type": "object", "additionalProperties": false,
+      "required": ["attemptId", "reviewedRevision", "reviewedRequestSha256"],
+      "properties": {
+        "attemptId": { "$ref": "#/$defs/attemptId" },
+        "reviewedRevision": { "type": "integer", "minimum": 1 },
+        "reviewedRequestSha256": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "draftState": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "id", "revision", "status", "content", "operations", "submission", "updatedAt"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "id": { "$ref": "#/$defs/draftId" },
+        "revision": { "type": "integer", "minimum": 1, "maximum": 513 },
+        "status": { "enum": ["draft", "review", "submitted"] },
+        "content": { "$ref": "#/$defs/draftContent" },
+        "operations": { "type": "array", "minItems": 1, "maxItems": 513, "items": { "$ref": "#/$defs/draftOperation" } },
+        "submission": { "oneOf": [{ "$ref": "#/$defs/draftSubmission" }, { "type": "null" }] },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "sourceDraftId": { "oneOf": [{ "$ref": "#/$defs/draftId" }, { "type": "null" }] }
+      },
+      "description": "Atomic saved content and ordered operation receipts. Domain validation additionally binds sequential revisions and any immutable submitted request to the admission index."
+    },
+    "producer": {
+      "type": "object", "additionalProperties": false, "required": ["processId", "startedUtcTicks"],
+      "properties": {
+        "processId": { "type": "integer", "minimum": 1 },
+        "startedUtcTicks": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "attempt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "id", "token", "idempotencyHash", "requestSha256", "reviewedRequestSha256", "producer", "status", "stage", "createdAt", "updatedAt"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "id": { "$ref": "#/$defs/attemptId" },
+        "token": { "$ref": "#/$defs/hash" }, "idempotencyHash": { "$ref": "#/$defs/hash" },
+        "requestSha256": { "$ref": "#/$defs/hash" }, "reviewedRequestSha256": { "$ref": "#/$defs/hash" },
+        "producer": { "$ref": "#/$defs/producer" },
+        "status": { "enum": ["running", "cancelling", "completed", "failed", "cancelled", "interrupted"] },
+        "stage": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "cancellationRequested": { "type": "boolean", "default": false },
+        "errorCode": { "type": ["string", "null"] }
+      }
+    },
+    "cancellation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "attemptId", "token", "reviewedRequestSha256", "requestedAt"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "attemptId": { "$ref": "#/$defs/attemptId" },
+        "token": { "$ref": "#/$defs/hash" }, "reviewedRequestSha256": { "$ref": "#/$defs/hash" },
+        "requestedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["path", "sha256", "kind"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/hash" },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 80 }
+      },
+      "description": "Attempt-relative portable handle; runtime rejects traversal/devices/reparse points, control-file references and changed hashes. Artifacts are public only through a valid final manifest."
+    },
+    "status": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "attemptId", "status", "stage", "live", "liveness", "cancellationRequested", "artifacts", "errorCode"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "attemptId": { "$ref": "#/$defs/attemptId" },
+        "status": { "enum": ["running", "cancelling", "completed", "failed", "cancelled", "interrupted"] },
+        "stage": { "type": "string", "minLength": 1, "maxLength": 80 }, "live": { "type": "boolean" },
+        "liveness": { "enum": ["terminal", "unverified-lock-held", "exclusive-owner-and-process-start-identity", "not-this-verified-owner"] },
+        "cancellationRequested": { "type": "boolean" }, "artifacts": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/artifact" } },
+        "errorCode": { "type": ["string", "null"] }, "replay": { "type": "boolean", "default": false },
+        "humanReviewRequired": { "const": true }, "automaticRestartResume": { "const": false }
+      }
+    },
+    "manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "attemptId", "token", "reviewedRequestSha256", "completedAt", "artifacts"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "attemptId": { "$ref": "#/$defs/attemptId" },
+        "token": { "$ref": "#/$defs/hash" }, "reviewedRequestSha256": { "$ref": "#/$defs/hash" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "artifacts": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/artifact" } },
+        "humanReviewRequired": { "const": true }
+      }
+    }
+  }
+}

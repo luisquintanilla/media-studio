@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "projectId": "synthetic-audio",
+  "revision": 1,
+  "outputName": "audio-master",
+  "sampleRate": 16000,
+  "maximumSamples": 32000,
+  "parts": [
+    {
+      "id": "introduction",
+      "text": "Synthetic fixture: two audible tones, not synthesized speech.",
+      "pauseAfterSamples": 2000
+    },
+    {
+      "id": "conclusion",
+      "text": "This tests independent audio composition and exact sample clocks only.",
+      "pauseAfterSamples": 2000
+    }
+  ],
+  "voice": {
+    "voice": "synthetic-tone",
+    "language": "en",
+    "speed": 1
+  },
+  "provider": {
+    "provider": "synthetic-fixture-not-tts",
+    "clientType": "AudioTranscriber.Tests.AudioProductionTests\u002BSyntheticToneClient",
+    "artifacts": []
+  }
+}

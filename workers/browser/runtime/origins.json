@@ -1,0 +1,20 @@
+[
+  {
+    "version": "3.14.2",
+    "sourceBlob": "fde57af06cc445f47ca2a6fc1232ec04666346d4",
+    "package": "gsap",
+    "sha256": "c174bfce53a729418d57a8ad8625e7247c793a22fef8e2851e3cfa3de9cd8280",
+    "sourceCommit": "e830e8fc16fafa10644a93d341613ef54133eb5f",
+    "license": "https://gsap.com/standard-license/",
+    "file": "gsap.min.js"
+  },
+  {
+    "version": "0.8.33",
+    "distribution": "https://cdn.jsdelivr.net/npm/hyperframes@0.8.33/dist/hyperframe.runtime.iife.js",
+    "package": "hyperframes",
+    "sha256": "696c9c6ff46c173d319b17ce873a3cdcbc290cfe94cd4c0e307a76caff9c8a98",
+    "sourceCommit": "6e3308be4f2ab886597fcee7c5896a5f842ec4b6",
+    "license": "Apache-2.0",
+    "file": "hyperframe.runtime.iife.js"
+  }
+]

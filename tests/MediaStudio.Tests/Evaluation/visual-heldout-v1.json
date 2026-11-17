@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "task": "visual-choice",
+  "split": "locked-heldout",
+  "labelsVersion": "synthetic-review-labels-v1",
+  "evidenceBoundary": "Authored synthetic text/scene examples; mechanical fixture, not live model quality, calibrated probabilities or acoustic evidence.",
+  "cases": [
+    { "id": "vh-title", "family": "audio-integrity-heading", "kind": "title", "text": "Independent audio integrity", "mechanism": "Identify the finished audio candidate", "acceptedVisuals": ["plain"] },
+    { "id": "vh-flow", "family": "transcript-evidence-chain", "kind": "diagram", "text": "Observed segment\nAdvisory triage\nHuman review", "mechanism": "Evidence moves through an ordered flow", "acceptedVisuals": ["architectureFlowEmphasis"] },
+    { "id": "vh-code", "family": "argv-protocol", "kind": "code", "text": "start.ArgumentList.Add(value);\nawait WaitForExitStatusAsync(token);", "mechanism": "A code change retains literal arguments", "acceptedVisuals": ["progressiveCodeFocus"] },
+    { "id": "vh-comparison", "family": "proposal-versus-approval", "kind": "diagram", "text": "Before: suggested edit\nAfter: explicitly saved text", "mechanism": "A before/after distinction, not an inferred approval", "acceptedVisuals": ["beforeAfterComparison"] },
+    { "id": "vh-uncertain", "family": "library-evidence-options", "kind": "diagram", "text": "Indexed item\nDecoded playback", "mechanism": "An uncertain flow between existing evidence surfaces", "acceptedVisuals": ["plain", "architectureFlowEmphasis"] },
+    { "id": "vh-relationship", "family": "source-integrity-dependencies", "kind": "diagram", "text": "Frozen input\nHashed manifest\nVerified output", "mechanism": "Directed integrity dependencies", "acceptedVisuals": ["architectureFlowEmphasis"] }
+  ]
+}

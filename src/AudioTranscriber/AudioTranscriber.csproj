@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>AudioTranscriber</AssemblyName>
+    <RootNamespace>AudioTranscriber</RootNamespace>
+    <TargetFramework>net11.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="audio-transcriber" />
+    <InternalsVisibleTo Include="AudioTranscriber.Tests" />
+    <InternalsVisibleTo Include="MediaStudio" />
+    <None Include="..\..\third_party\onnxruntime-notices\LICENSE" Link="notices\OnnxRuntime.LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\third_party\onnxruntime-notices\ThirdPartyNotices.txt" Link="notices\OnnxRuntime.ThirdPartyNotices.txt" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+    <PackageReference Include="Whisper.net" />
+    <PackageReference Include="Whisper.net.Runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="SMART_TOOL.md" />
+  </ItemGroup>
+
+</Project>

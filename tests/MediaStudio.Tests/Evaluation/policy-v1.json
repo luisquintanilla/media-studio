@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "fixtureVersion": "mechanical-v1",
+  "visualConfidenceMinimum": 0.75,
+  "visualMarginMinimum": 0.2,
+  "binaryUncertainLow": 0.4,
+  "binaryUncertainHigh": 0.6
+}

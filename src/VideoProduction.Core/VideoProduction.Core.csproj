@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Media.Narration\Media.Narration.csproj" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+    <EmbeddedResource Include="..\..\SMART_TOOL.md" LogicalName="VideoProduction.SMART_TOOL.md" />
+    <Content Include="..\..\assets\fonts\Inter-Regular.ttf;..\..\assets\fonts\OFL.txt" LinkBase="assets\fonts" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

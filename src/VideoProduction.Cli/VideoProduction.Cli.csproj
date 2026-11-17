@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>video-production</AssemblyName>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>video-production</ToolCommandName>
+    <Version>0.1.0</Version>
+    <PackageId>video-production</PackageId>
+    <Authors>video-production contributors</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>Local, headless, evidence-backed video production.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <ProjectReference Include="..\Media.Audio\Media.Audio.csproj" />
+    <ProjectReference Include="..\VideoProduction.Core\VideoProduction.Core.csproj" />
+    <ProjectReference Include="..\VideoProduction.Providers\VideoProduction.Providers.csproj" />
+    <ProjectReference Include="..\MediaStudio.Sources\MediaStudio.Sources.csproj" />
+    <Content Include="..\..\README.md;..\..\LICENSE;..\..\THIRD-PARTY-NOTICES.md;..\..\SMART_TOOL.md">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\..\docs\**\*">
+      <Link>docs\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\..\schemas\*.json">
+      <Link>schemas\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

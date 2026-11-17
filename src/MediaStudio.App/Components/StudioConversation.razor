@@ -1,0 +1,80 @@
+@namespace MediaStudio.App.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using VideoProduction.Providers
+@inject Microsoft.JSInterop.IJSRuntime JS
+<aside id="studio-conversation" class="conversation-panel" aria-label="Authoring conversation">
+    <header><div><h2>Shape the explanation</h2><span class="status-label">@(Workspace.Busy ? "Writing..." : Workspace.AuthorConfigured ? "Writing model selected" : "Choose a writing model or edit directly")</span></div>
+        <button class="icon-button" data-close-conversation aria-label="Hide conversation" @onclick="CloseRequested">×</button>
+    </header>
+    <div class="conversation-history" @ref="history" aria-live="polite" aria-relevant="additions">
+        @foreach (var message in Workspace.Draft.Messages.TakeLast(20))
+        {
+            @if (message.Role == "user")
+            {
+                <details class="conversation-message user"><summary>Your request</summary><p>@message.Text</p></details>
+            }
+            else
+            {
+                <div class="conversation-message change"><span>Applied to your draft</span><StudioMarkdown Text="@message.Text" /></div>
+            }
+        }
+        @if (Workspace.AgentText.Length > 0) { <div class="conversation-message assistant"><span>Author</span><StudioMarkdown Text="@Workspace.AgentText" /></div> }
+    </div>
+    <div class="conversation-composer">
+        <StudioModelSelect Workspace="Workspace" />
+        <label class="sr-only" for="media-author-request">Describe a draft change</label>
+        <textarea id="media-author-request" placeholder="@ChangeHint" maxlength="8000"
+            @bind="request" @bind:event="oninput" @onkeydown="Key"></textarea>
+        <div class="actions">
+            <button data-add-ending class="subtle" @onclick="() => request = EndingRequest">@EndingLabel</button>
+            @if (Workspace.Busy) { <button @onclick="Workspace.CancelAuthoring">Cancel authoring</button> }
+            else { <button id="media-propose" class="primary" disabled="@(!Workspace.AuthorConfigured || Workspace.SourcesBusy || Workspace.Voice.InputPending || string.IsNullOrWhiteSpace(request))" @onclick="Send">Send</button> }
+        </div>
+        <StudioVoiceInput Voice="Workspace.Voice" Busy="@(Workspace.Busy || Workspace.SourcesBusy)"
+            InsertionTarget="@("request:" + Workspace.Draft.DraftId)"
+            ComposerText="@request"
+            InsertionReady="() => !Workspace.Busy && !Workspace.SourcesBusy" SetupRequested="SetupRequested"
+            InsertRequested="InsertVoice" />
+    </div>
+</aside>
+@code {
+    [Parameter, EditorRequired] public MediaWorkspace Workspace { get; set; } = null!;
+    [Parameter] public EventCallback<string> SendRequested { get; set; }
+    [Parameter] public EventCallback SetupRequested { get; set; }
+    [Parameter] public EventCallback CloseRequested { get; set; }
+    string request { get => Workspace.AuthoringRequest; set => Workspace.AuthoringRequest = value; }
+    string EndingLabel => Workspace.Working.Outputs switch { MediaOutput.Audio => "Add part", MediaOutput.Both => "Add ending", _ => "Add scene" };
+    string ChangeHint => Workspace.Working.Outputs switch {
+        MediaOutput.Audio => "Add a part, simplify the narration, make it longer...",
+        MediaOutput.Both => "Add an ending, simplify the narration, make it longer...",
+        _ => "Add a scene, simplify the narration, make it longer..." };
+    string EndingRequest => Workspace.Working.Outputs switch {
+        MediaOutput.Audio => "Add a closing audio part explaining the takeaway.",
+        MediaOutput.Both => "Add a closing audio part and video scene explaining the takeaway.",
+        _ => "Add a closing scene explaining the takeaway." };
+    ElementReference history;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("studioFollowConversation", history,
+                $"{Workspace.Draft.DraftId}:{Workspace.Draft.Messages.Length}:{Workspace.Draft.Version}:{Workspace.AgentText.Length}");
+        }
+        catch (JSException error) { Workspace.Error = "Conversation scrolling failed: " + error.Message; }
+        catch (JSDisconnectedException error) { Console.Error.WriteLine("Conversation disconnected during window cleanup: " + error.Message); }
+    }
+    void InsertVoice(string text)
+    {
+        var combined = string.IsNullOrWhiteSpace(request) ? text : request + "\n" + text;
+        if (combined.Length > 8000) throw new InvalidOperationException("The combined request exceeds 8000 characters. Shorten the prompt, then add the retained dictation.");
+        request = combined;
+    }
+    async Task Key(KeyboardEventArgs args) { if (args.CtrlKey && args.Key == "Enter") await Send(); }
+    async Task Send()
+    {
+        if (Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending || !Workspace.AuthorConfigured || string.IsNullOrWhiteSpace(request)) return;
+        var intent = request; request = "";
+        await SendRequested.InvokeAsync(intent);
+    }
+}

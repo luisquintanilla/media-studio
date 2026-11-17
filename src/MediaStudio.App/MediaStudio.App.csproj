@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net11.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>MediaStudio.App</RootNamespace>
+    <AssemblyName>MediaStudio</AssemblyName>
+    <UserSecretsId>MediaStudio.Sample.Development</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.AI" />
+    <PackageReference Include="Whisper.net" />
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="CommunityToolkit.DocumentExtraction.Mistral" />
+    <ProjectReference Include="..\MediaStudio.Agents\MediaStudio.Agents.csproj" />
+    <ProjectReference Include="..\MediaStudio.Configuration\MediaStudio.Configuration.csproj" />
+    <ProjectReference Include="..\AudioTranscriber\AudioTranscriber.csproj" />
+    <ProjectReference Include="..\MediaStudio.Sources\MediaStudio.Sources.csproj" />
+    <ProjectReference Include="..\VideoProduction.Cli\VideoProduction.Cli.csproj" ReferenceOutputAssembly="false" />
+    <Content Update="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\licenses\Markdig.LICENSE.txt" Link="licenses\Markdig.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="CopyMediaProducer" AfterTargets="Build">
+    <ItemGroup>
+      <MediaProducerFile Include="..\VideoProduction.Cli\bin\$(Configuration)\net11.0\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(MediaProducerFile)"
+          DestinationFiles="@(MediaProducerFile->'$(TargetDir)producer\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+  <!-- The Copilot CLI license requires redistributed copies to ship with its LICENSE; the SDK's copy step excludes it. -->
+  <Target Name="IncludeCopilotCliLicense" AfterTargets="_RegisterCopilotCliForCopy" Condition="'$(CopilotSkipCliDownload)' != 'true' And '$(_CopilotCacheDir)' != ''">
+    <ItemGroup>
+      <ContentWithTargetPath Include="$(_CopilotCacheDir)\LICENSE.md" TargetPath="licenses\GitHubCopilotCLI.LICENSE.md"
+                             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+                             Condition="Exists('$(_CopilotCacheDir)\LICENSE.md')" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -1,0 +1,69 @@
+{
+  "entities": [
+    {
+      "id": "sun", "shape": "sun", "tone": "warm", "label": "Sun warms water", "width": 100, "height": 100,
+      "keys": [{ "percent": 0, "x": 230, "y": 200, "opacity": 1 }, { "percent": 100, "x": 230, "y": 200, "opacity": 1 }]
+    },
+    {
+      "id": "water", "shape": "box", "tone": "water", "label": "Liquid water", "width": 240, "height": 50,
+      "keys": [{ "percent": 0, "x": 370, "y": 500, "opacity": 1 }, { "percent": 100, "x": 370, "y": 500, "opacity": 1 }]
+    },
+    {
+      "id": "moist-air", "shape": "arrow", "tone": "air", "label": "Rising moist air", "width": 60, "height": 90,
+      "keys": [
+        { "percent": 0, "x": 430, "y": 410, "opacity": 0 },
+        { "percent": 15, "x": 430, "y": 400, "opacity": 1 },
+        { "percent": 45, "x": 500, "y": 230, "opacity": 1 },
+        { "percent": 65, "x": 530, "y": 190, "opacity": 0 },
+        { "percent": 100, "x": 530, "y": 190, "opacity": 0 }
+      ]
+    },
+    {
+      "id": "cloud", "shape": "cloud", "tone": "neutral", "label": "Liquid cloud droplets", "width": 240, "height": 130,
+      "keys": [
+        { "percent": 0, "x": 700, "y": 180, "opacity": 0 },
+        { "percent": 30, "x": 700, "y": 180, "opacity": 0 },
+        { "percent": 50, "x": 700, "y": 180, "opacity": 0.85 },
+        { "percent": 100, "x": 700, "y": 180, "opacity": 0.85 }
+      ]
+    },
+    {
+      "id": "droplet-left", "shape": "circle", "tone": "water", "label": "", "width": 24, "height": 24,
+      "keys": [
+        { "percent": 0, "x": 650, "y": 195, "opacity": 0 },
+        { "percent": 40, "x": 650, "y": 195, "opacity": 0 },
+        { "percent": 50, "x": 650, "y": 195, "opacity": 1 },
+        { "percent": 70, "x": 700, "y": 235, "opacity": 1 },
+        { "percent": 75, "x": 700, "y": 240, "opacity": 0 },
+        { "percent": 100, "x": 700, "y": 240, "opacity": 0 }
+      ]
+    },
+    {
+      "id": "droplet-right", "shape": "circle", "tone": "water", "label": "", "width": 24, "height": 24,
+      "keys": [
+        { "percent": 0, "x": 750, "y": 195, "opacity": 0 },
+        { "percent": 40, "x": 750, "y": 195, "opacity": 0 },
+        { "percent": 50, "x": 750, "y": 195, "opacity": 1 },
+        { "percent": 70, "x": 700, "y": 235, "opacity": 1 },
+        { "percent": 75, "x": 700, "y": 240, "opacity": 0 },
+        { "percent": 100, "x": 700, "y": 240, "opacity": 0 }
+      ]
+    },
+    {
+      "id": "rain", "shape": "drop", "tone": "water", "label": "Rain", "width": 50, "height": 70,
+      "keys": [
+        { "percent": 0, "x": 700, "y": 245, "opacity": 0 },
+        { "percent": 70, "x": 700, "y": 245, "opacity": 0 },
+        { "percent": 77, "x": 700, "y": 280, "opacity": 1 },
+        { "percent": 92, "x": 700, "y": 490, "opacity": 1 },
+        { "percent": 100, "x": 700, "y": 490, "opacity": 1 }
+      ]
+    }
+  ],
+  "stages": [
+    { "percent": 0, "caption": "Warming liquid water allows some water to evaporate into invisible vapor." },
+    { "percent": 25, "caption": "The arrow represents moist air rising and cooling, not visible vapor droplets." },
+    { "percent": 45, "caption": "Cooling can condense vapor into tiny liquid cloud droplets." },
+    { "percent": 70, "caption": "Liquid drops combine; sufficiently large drops fall as rain." }
+  ]
+}

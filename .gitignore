@@ -1,0 +1,19 @@
+.dotnet/
+**/bin/
+**/obj/
+**/TestResults/
+.local/
+workers/browser/node_modules/
+artifacts/
+*.user
+*.bak
+*-import.tar
+.azure/
+# Local model downloads and per-user state relocated into the repo (MEDIASTUDIO_HOME)
+/models/
+/.mediastudio/
+*.v1.bak.json
+.vs/
+.vscode/
+*.swp
+.DS_Store

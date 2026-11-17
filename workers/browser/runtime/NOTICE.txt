@@ -1,0 +1,16 @@
+Optional animated-mechanism runtime assets
+
+GSAP 3.14.2
+Source: greensock/GSAP commit e830e8fc16fafa10644a93d341613ef54133eb5f
+Distribution: dist/gsap.min.js, including its original copyright/license header.
+License: GSAP Standard "no charge" license, https://gsap.com/standard-license/
+GSAP is not relicensed under this sample's MIT license.
+
+HyperFrames 0.8.33
+Source: heygen-com/hyperframes commit 6e3308be4f2ab886597fcee7c5896a5f842ec4b6
+Distribution: npm hyperframes@0.8.33/dist/hyperframe.runtime.iife.js
+License: Apache-2.0; see HyperFrames-LICENSE.txt.
+
+Only these reviewed browser runtime files are included. No CLI, remote CDN
+loader, model, renderer-generated executable code, or automatic download runs
+inside Studio. origins.json records source/distribution identities and hashes.

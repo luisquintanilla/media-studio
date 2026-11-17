@@ -1,0 +1,162 @@
+{
+  "scope": "actual native CPU ONNX decision inference; no generative/cloud calls",
+  "timestamp": "2026-10-28T20:01:22.7066344+00:00",
+  "model": "SupersonicLabs/Julia-1-ONNX",
+  "revision": "82a2fadf8fccfccdc5fd4e1009ba8f1a265eb7a8",
+  "contractRevision": "e87f1126cf22108fb27f6391c7826fb91c25138e",
+  "providerRevision": "ce28e92b338b0edfbc22cca3c62101fa75c008f7",
+  "manifestFingerprint": "f1360e9e09fad7ec986e9d868db420e8242d62e86bc8ff4615dc1886768fcd6a",
+  "assetManifest": "SupersonicLabs/Julia-1-ONNX@82a2fadf8fccfccdc5fd4e1009ba8f1a265eb7a8\nmodel.onnx 97141d0cfb1da6204e9f8f24d581af72eaeb82cda21149d83eaa6df7160fbcd9\nmodel.onnx.data fd915be810d7ebfb80fb05a48dd33c9484d17ae1b6bcb9e1f544cbaaa913ded1\ntokenizer.json 609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f\n",
+  "inputSha256": "b3c00f519dda42b75d7c887b76021f09cc7d57883ff3d758027a61ac80a8e3cd",
+  "meai": "Microsoft.Extensions.AI.Abstractions/10.11.0",
+  "onnxRuntime": "Microsoft.ML.OnnxRuntime/1.23.2",
+  "tokenizer": "Tokenizers.HuggingFace/3.23.1",
+  "tensors": "System.Numerics.Tensors/10.0.9",
+  "loadMilliseconds": 5853.3497,
+  "observations": [
+    {
+      "stage": "cold-inference",
+      "milliseconds": 247.6494,
+      "selected": "Fast",
+      "evidence": {
+        "request": {
+          "state": {
+            "brief": "Plan a short, straightforward garden tour with three scenes and concise narration."
+          },
+          "questions": [
+            {
+              "$type": "choice",
+              "candidates": [
+                {
+                  "id": "planning-fast",
+                  "description": "Straightforward storyboard planning with few constraints."
+                },
+                {
+                  "id": "planning-strong",
+                  "description": "Demanding storyboard planning with complex constraints."
+                }
+              ],
+              "id": "route",
+              "kind": "Choice",
+              "instructions": "Choose the appropriate storyboard planning route for this brief."
+            }
+          ]
+        },
+        "answers": [
+          {
+            "$type": "choice",
+            "selectedCandidateId": "planning-fast",
+            "probabilities": [
+              {
+                "id": "planning-fast",
+                "value": 0.9999965813218413
+              },
+              {
+                "id": "planning-strong",
+                "value": 3.418678158777859E-06
+              }
+            ],
+            "questionId": "route",
+            "kind": "Choice",
+            "precision": "HighPrecision",
+            "additionalProperties": null
+          }
+        ],
+        "provenance": {
+          "providerName": "julia",
+          "providerUri": null,
+          "modelId": "SupersonicLabs/Julia-1-ONNX",
+          "responseId": null,
+          "precision": "HighPrecision"
+        },
+        "usage": null,
+        "additionalProperties": null
+      },
+      "logits": [
+        7.670461654663086,
+        -4.9157915115356445
+      ]
+    },
+    {
+      "stage": "warm-inference",
+      "milliseconds": 58.1511,
+      "selected": "Fast",
+      "evidence": {
+        "request": {
+          "state": {
+            "brief": "Plan a short, straightforward garden tour with three scenes and concise narration."
+          },
+          "questions": [
+            {
+              "$type": "choice",
+              "candidates": [
+                {
+                  "id": "planning-fast",
+                  "description": "Straightforward storyboard planning with few constraints."
+                },
+                {
+                  "id": "planning-strong",
+                  "description": "Demanding storyboard planning with complex constraints."
+                }
+              ],
+              "id": "route",
+              "kind": "Choice",
+              "instructions": "Choose the appropriate storyboard planning route for this brief."
+            }
+          ]
+        },
+        "answers": [
+          {
+            "$type": "choice",
+            "selectedCandidateId": "planning-fast",
+            "probabilities": [
+              {
+                "id": "planning-fast",
+                "value": 0.9999965813218413
+              },
+              {
+                "id": "planning-strong",
+                "value": 3.418678158777859E-06
+              }
+            ],
+            "questionId": "route",
+            "kind": "Choice",
+            "precision": "HighPrecision",
+            "additionalProperties": null
+          }
+        ],
+        "provenance": {
+          "providerName": "julia",
+          "providerUri": null,
+          "modelId": "SupersonicLabs/Julia-1-ONNX",
+          "responseId": null,
+          "precision": "HighPrecision"
+        },
+        "usage": null,
+        "additionalProperties": null
+      },
+      "logits": [
+        7.670461654663086,
+        -4.9157915115356445
+      ]
+    }
+  ],
+  "operatingSystem": "Microsoft Windows 10.0.26200",
+  "processArchitecture": "X64",
+  "platformScope": "This run proves Windows native CPU inference only; no Ubuntu/Linux parity, cross-platform or AOT claim.",
+  "loadedNativeBinaries": [
+    {
+      "name": "onnxruntime.DLL",
+      "sha256": "dec964ab1ee36cc9b0ae247d13b376627992fc57dec0454354017ab8fd84f1ea"
+    },
+    {
+      "name": "tokenizers_proto.DLL",
+      "sha256": "77217649beaf38fa45f7e05b85cc59aa024977038005ec0c6673851352b4dba3"
+    }
+  ],
+  "dependencyAdaptation": "Original provider Tensors 10.0.9 retained; only official MEAI Abstractions 10.11.0 is referenced. No full AI/cache dependency uplift.",
+  "assertions": 6,
+  "preCancelledRejected": true,
+  "reservedRejected": true,
+  "overBudgetRejected": true
+}

@@ -1,0 +1,505 @@
+@namespace MediaStudio.App.Components.Setup
+@using System.IO
+@using System.Net.Http
+@using MediaStudio.Configuration
+@using MediaStudio.Agents.Copilot
+@inject MediaWorkspace Workspace
+@inject Microsoft.JSInterop.IJSRuntime JS
+@inject SetupState Setup
+@implements IDisposable
+
+<section id="setup-wizard" class="setup-wizard" aria-label="Setup">
+    <ol class="setup-steps">
+        <li class="@(step == 1 ? "current" : "")">Mode</li>
+        @if (UsesLocal) { <li class="@(step == 2 ? "current" : "")">Local</li> }
+        @if (UsesAzure) { <li class="@(step == 3 ? "current" : "")">Azure</li> }
+        <li class="@(step == 4 ? "current" : "")">Roles</li>
+        <li class="@(step == 5 ? "current" : "")">GitHub Copilot (optional)</li>
+    </ol>
+
+    @if (step == 1)
+    {
+        <h3>How do you want to run models?</h3>
+        <fieldset id="setup-mode">
+            <label><input type="radio" name="setup-mode" checked="@(mode == "local")" @onchange="@(() => mode = "local")" /> <strong>Local (recommended — free, private)</strong>. Ollama, Kokoro, Whisper and Julia run on this PC; nothing leaves it.</label>
+            <label><input type="radio" name="setup-mode" checked="@(mode == "azure")" @onchange="@(() => mode = "azure")" /> <strong>Azure</strong>. Use your Microsoft Foundry project (sign in with az/azd; no keys stored).</label>
+            <label><input type="radio" name="setup-mode" checked="@(mode == "both")" @onchange="@(() => mode = "both")" /> <strong>Both</strong>. Local first; Foundry only when you allow cloud and a task needs it.</label>
+        </fieldset>
+        <button id="setup-next-mode" @onclick="NextFromMode">Next</button>
+    }
+    else if (step == 2)
+    {
+        <h3>Local runtimes</h3>
+        @if (report is null) { <p>Detecting Ollama, hardware and speech tools…</p> }
+        else
+        {
+            var ollamaTier = manifest.GetTier(tier);
+            <p id="setup-hardware">@report.Hardware.RamGb.ToString("0.#") GB RAM · @(report.Hardware.VramGb is { } vram ? $"{vram:0.#} GB VRAM ({report.Hardware.GpuName ?? "GPU"})" : "no discrete GPU detected") → recommended tier <strong>@report.RecommendedTier</strong></p>
+            <label>Tier <select id="setup-tier" value="@tier" @onchange="SelectTier">
+                @foreach (var t in Enum.GetValues<HardwareTier>()) { <option value="@t">@t — @manifest.GetTier(t).Balanced</option> }
+            </select></label>
+            <table class="setup-table">
+                <thead><tr><th>Role</th><th>Model</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>Chat (fast)</td><td>@ollamaTier.Fast</td><td>@TagStatus(ollamaTier.Fast)</td></tr>
+                    <tr><td>Chat (balanced)</td><td>@ollamaTier.Balanced</td><td>@TagStatus(ollamaTier.Balanced)</td></tr>
+                    <tr><td>Vision</td><td>@ollamaTier.Vision</td><td>@TagStatus(ollamaTier.Vision)</td></tr>
+                    <tr><td>Embeddings</td><td>@ollamaTier.Embedding</td><td>@TagStatus(ollamaTier.Embedding)</td></tr>
+                    @foreach (var id in manifest.RequiredAssetsFor(tier))
+                    {
+                        var asset = manifest.GetAsset(id);
+                        <tr><td>@asset.DisplayName</td><td>@ConfigureCommands.FormatBytes(asset.TotalBytes) · @asset.License</td><td>@AssetStatus(id)</td></tr>
+                    }
+                </tbody>
+            </table>
+            @if (!report.Ollama.Available)
+            {
+                <p id="setup-ollama-missing">Ollama is not running. Install it with <code>winget install Ollama.Ollama</code>, start it, then re-check.</p>
+                <button id="setup-install-ollama" disabled="@busy" @onclick="InstallOllama">Install Ollama (opens winget)</button>
+            }
+            else if (report.MissingOllamaTags(ollamaTier) is { Length: > 0 } missing)
+            {
+                <button id="setup-pull-models" disabled="@busy" @onclick="() => PullAsync(missing)">Pull models (@string.Join(", ", missing))</button>
+            }
+            <button id="setup-download-assets" disabled="@busy" @onclick="DownloadAssetsAsync">Download speech and decision models</button>
+            <button id="setup-redetect" disabled="@busy" @onclick="DetectAsync">Re-check</button>
+            @if (progressText is not null) { <p id="setup-progress"><progress max="1" value="@progressValue"></progress> @progressText</p> }
+            <p>espeak-ng (optional, improves pronunciation): @(report.EspeakNgPath ?? "not found")</p>
+        }
+        <button @onclick="() => step = 1">Back</button>
+        <button id="setup-next-local" disabled="@(busy || report is null)" @onclick="NextFromLocal">Next</button>
+    }
+    else if (step == 3)
+    {
+        <h3>Microsoft Foundry</h3>
+        <p>Media Studio signs in with your Azure identity (az login / azd auth login / Visual Studio). Keys are never written to settings; an API key is read only from <code>MEDIASTUDIO__CONNECTIONS__AZURE__APIKEY</code> or user-secrets.</p>
+        <button id="setup-import-azd" disabled="@busy" @onclick="ImportAzdAsync">Import from azd</button>
+        <details><summary>Or paste an endpoint</summary>
+            <label>Foundry endpoint <input id="setup-endpoint" placeholder="https://<account>.services.ai.azure.com" @bind="endpoint" /></label>
+            <label>Authentication <select id="setup-auth" @bind="authMode"><option value="entra">Microsoft Entra (recommended)</option><option value="api-key">API key (from env / user-secrets)</option></select></label>
+            <button id="setup-apply-endpoint" disabled="@busy" @onclick="ApplyEndpoint">Use this endpoint</button>
+        </details>
+        @if (azureSummary is not null) { <p id="setup-azure-summary">@azureSummary</p> }
+        <label class="setup-switch"><input id="setup-allow-cloud" type="checkbox" checked="@allowCloud" @onchange="e => allowCloud = (bool)e.Value!" />
+            Allow cloud. When on, a request may be sent to your Foundry project when a local model is not confident enough or a feature needs it. When off, nothing leaves this PC.</label>
+        <label class="setup-switch"><input id="setup-cloud-speech" type="checkbox" checked="@cloudSpeech" disabled="@(!allowCloud || draft?.FindConnection(ProviderSettingsDefaults.AzureConnectionId) is null)" @onchange="e => cloudSpeech = (bool)e.Value!" />
+            Cloud speech: MAI-Voice / MAI-Transcribe (narration and transcription use Azure Speech instead of Kokoro/Whisper).</label>
+        <button @onclick="() => step = UsesLocal ? 2 : 1">Back</button>
+        <button id="setup-next-azure" disabled="@busy" @onclick="NextFromAzure">Next</button>
+    }
+    else if (step == 4 && draft is not null)
+    {
+        <h3>Roles</h3>
+        <p>Cloud is <strong>@(draft.Privacy.AllowCloud ? "allowed" : "off")</strong>. Chat tiers are tried in order; the router moves up only when needed.</p>
+        <table id="setup-roles" class="setup-table">
+            <thead><tr><th>Role</th><th>Uses</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var row in Rows())
+                {
+                    <tr><td>@row.Label</td><td>@row.Uses</td><td>@RowStatus(row.Prefix)</td>
+                        <td><button disabled="@busy" @onclick="TestAsync">Test</button></td></tr>
+                }
+            </tbody>
+        </table>
+        <button @onclick="() => step = UsesAzure ? 3 : 2">Back</button>
+        <button id="setup-copilot" disabled="@busy" @onclick="OpenCopilotAsync">GitHub Copilot (optional)…</button>
+        <button id="setup-save" class="primary" disabled="@busy" @onclick="SaveAsync">Save</button>
+    }
+    else if (step == 5 && draft is not null)
+    {
+        <h3>GitHub Copilot (optional)</h3>
+        <p>Use your own GitHub Copilot plan as a strong cloud tier or as the authoring agent runtime. Copilot use consumes <strong>your premium requests</strong> and sends prompts to GitHub. Media Studio never stores your GitHub token; sign-in is kept in the app's private Copilot folder.</p>
+        <fieldset id="setup-copilot-backend">
+            <label><input type="radio" name="copilot-backend" checked="@(!copilotByok)" @onchange="@(() => SetByokAsync(false))" /> My GitHub Copilot subscription (sign in with GitHub).</label>
+            <label><input type="radio" name="copilot-backend" checked="@copilotByok" disabled="@(ByokConnections.Length == 0)" @onchange="@(() => SetByokAsync(true))" /> Run the Copilot agent on my own models (BYOK). No GitHub sign-in.</label>
+            @if (copilotByok)
+            {
+                <label>Connection <select id="setup-copilot-byok" value="@byokConnection" @onchange="SelectByokAsync">
+                    @foreach (var id in ByokConnections) { <option value="@id">@id</option> }
+                </select></label>
+            }
+        </fieldset>
+        @if (!copilotByok)
+        {
+            <label class="setup-switch"><input id="setup-copilot-allow-cloud" type="checkbox" checked="@draft.Privacy.AllowCloud" @onchange="SetCopilotCloudAsync" />
+                Allow cloud. Required for the Copilot subscription (also lets other configured cloud roles run).</label>
+        }
+        <p id="setup-copilot-status">@CopilotStatusText()</p>
+        @if (deviceCode is not null)
+        {
+            <p id="setup-copilot-code">Enter <strong>@deviceCode.UserCode</strong> at <a href="@deviceCode.VerificationUri" target="_blank">@deviceCode.VerificationUri</a>.</p>
+            <button id="setup-copilot-copy" @onclick="CopyCodeAsync">Copy code</button>
+            <button id="setup-copilot-open" @onclick="() => OpenBrowser(deviceCode.VerificationUri)">Open browser</button>
+        }
+        @if (copilotMessage is not null) { <p id="setup-copilot-message">@copilotMessage</p> }
+        @if (signIn is not null)
+        {
+            <button id="setup-copilot-cancel" @onclick="() => signIn?.Cancel()">Cancel sign-in</button>
+        }
+        else if (!copilotByok && draft.Privacy.AllowCloud && copilotStatus is { Installed: true, Authenticated: false })
+        {
+            <button id="setup-copilot-signin" disabled="@busy" @onclick="SignInAsync">Sign in with GitHub</button>
+            <p>Other ways: run <code>gh auth login</code>, or set <code>COPILOT_GITHUB_TOKEN</code> before starting Media Studio.</p>
+        }
+        @if (copilotStatus is { Ready: true })
+        {
+            <label>Model <select id="setup-copilot-model" value="@copilotModel" @onchange="e => copilotModel = (string?)e.Value">
+                @foreach (var m in copilotStatus.Models) { <option value="@m">@m</option> }
+            </select></label>
+            @if (!copilotByok)
+            {
+                <label><input id="setup-copilot-tier" type="checkbox" checked="@copilotTier" @onchange="e => copilotTier = (bool)e.Value!" /> Use as strong cloud tier for authoring</label>
+            }
+            <label><input id="setup-copilot-runtime" type="checkbox" checked="@copilotRuntime" @onchange="e => copilotRuntime = (bool)e.Value!" /> Use the Copilot agent runtime for authoring</label>
+            @if (!copilotByok) { <button id="setup-copilot-signout" disabled="@(busy || signIn is not null)" @onclick="SignOutAsync">Sign out</button> }
+        }
+        <button @onclick="() => step = 4">Back</button>
+        <button id="setup-copilot-remove" disabled="@busy" @onclick="RemoveCopilot">Don't use Copilot</button>
+        <button id="setup-copilot-apply" class="primary" disabled="@(busy || signIn is not null)" @onclick="ApplyCopilot">Use these Copilot settings</button>
+    }
+    @if (error is not null) { <p id="setup-error" class="error" role="alert">@error</p> }
+    @if (saved) { <p id="setup-saved">Saved to @Setup.Store.FilePath. You can change this any time in Settings → Setup.</p> }
+</section>
+
+@code {
+    [Parameter] public EventCallback Completed { get; set; }
+
+    readonly CancellationTokenSource stop = new();
+    readonly ModelManifest manifest = ModelManifest.LoadDefault();
+    int step = 1;
+    string mode = "local";
+    bool UsesLocal => mode is "local" or "both";
+    bool UsesAzure => mode is "azure" or "both";
+    LocalRuntimeReport? report;
+    HardwareTier tier = HardwareTier.M;
+    ProviderSettings? draft;
+    bool busy, saved, allowCloud, cloudSpeech;
+    string? error, progressText, azureSummary, endpoint;
+    string authMode = "entra";
+    double progressValue;
+    IReadOnlyList<RoleCheck>? checks;
+    ModelAssets? assets;
+    CopilotClientFactory? copilotClients;
+    CopilotStatus? copilotStatus;
+    CopilotDeviceCode? deviceCode;
+    CancellationTokenSource? signIn;
+    string? copilotModel, byokConnection, copilotMessage;
+    bool copilotByok, copilotTier, copilotRuntime;
+
+    protected override void OnInitialized()
+    {
+        assets = new ModelAssets(manifest);
+        if (!Setup.Store.Exists) return;
+        try
+        {
+            draft = Setup.Store.Load();
+            allowCloud = draft.Privacy.AllowCloud;
+            cloudSpeech = draft.Speech.Tts.Provider == TtsProvider.AzureSpeech;
+            var hasAzure = draft.Connections.Any(c => c.Kind == ConnectionKind.Foundry);
+            var hasLocal = draft.Connections.Any(c => c.Kind == ConnectionKind.OpenAICompatible);
+            mode = hasAzure && hasLocal ? "both" : hasAzure ? "azure" : "local";
+        }
+        catch (Exception e) when (e is InvalidDataException or System.Text.Json.JsonException or ProviderSettingsValidationException)
+        {
+            error = "The saved settings could not be read: " + e.Message;
+        }
+    }
+
+    void SelectTier(ChangeEventArgs e) => tier = Enum.Parse<HardwareTier>((string)e.Value!);
+
+    async Task NextFromMode()
+    {
+        if (UsesLocal) { step = 2; await DetectAsync(); }
+        else { step = 3; draft ??= ProviderSettingsDefaults.Local(tier, manifest); allowCloud = true; }
+    }
+
+    async Task DetectAsync()
+    {
+        await Run(async () =>
+        {
+            report = await new LocalRuntimeDetector().DetectAsync(cancellationToken: stop.Token);
+            tier = report.RecommendedTier;
+        });
+    }
+
+    void NextFromLocal()
+    {
+        var local = ProviderSettingsDefaults.Local(tier, manifest);
+        draft = draft is null ? local : ConfigureCommands.MergeLocal(draft, local);
+        if (UsesAzure) { step = 3; allowCloud = true; }
+        else { draft = draft with { Privacy = new() { AllowCloud = false } }; step = 4; }
+    }
+
+    void NextFromAzure()
+    {
+        draft ??= ProviderSettingsDefaults.Local(tier, manifest);
+        draft = ProviderSettingsDefaults.WithCloudSpeech(draft with { Privacy = new() { AllowCloud = allowCloud } }, allowCloud && cloudSpeech);
+        step = 4;
+    }
+
+    string TagStatus(string tag) => report?.Ollama.HasModel(tag) == true ? "✅ pulled" : "⬇ not pulled";
+
+    string AssetStatus(string id) => assets?.GetPath(id) is not null ? "✅ installed" : "⬇ not downloaded";
+
+    void InstallOllama()
+    {
+        // Explicit user action: opens a console running the documented winget command.
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", "/k winget install Ollama.Ollama") { UseShellExecute = true });
+    }
+
+    async Task PullAsync(string[] tags)
+    {
+        await Run(async () =>
+        {
+            var puller = new OllamaPuller();
+            foreach (var tag in tags)
+            {
+                var progress = new Progress<OllamaPullProgress>(p => _ = InvokeAsync(() =>
+                {
+                    progressValue = p.Fraction;
+                    progressText = $"ollama pull {p.Model}: {p.Status} {(p.Total > 0 ? ConfigureCommands.FormatBytes(p.Completed) + " / " + ConfigureCommands.FormatBytes(p.Total) : "")}";
+                    StateHasChanged();
+                }));
+                await puller.PullAsync(tag, progress, cancellationToken: stop.Token);
+            }
+            report = await new LocalRuntimeDetector().DetectAsync(cancellationToken: stop.Token);
+            progressText = "Models pulled.";
+        });
+    }
+
+    async Task DownloadAssetsAsync()
+    {
+        await Run(async () =>
+        {
+            foreach (var id in manifest.RequiredAssetsFor(tier))
+            {
+                var asset = manifest.GetAsset(id);
+                var progress = new Progress<ModelAssetProgress>(p => _ = InvokeAsync(() =>
+                {
+                    progressValue = p.Fraction;
+                    progressText = $"{asset.DisplayName}: {ConfigureCommands.FormatBytes(p.BytesDone)} / {ConfigureCommands.FormatBytes(p.BytesTotal)}";
+                    StateHasChanged();
+                }));
+                await assets!.EnsureAsync(id, progress, stop.Token);
+            }
+            progressText = "Speech and decision models are installed and verified.";
+        });
+    }
+
+    async Task ImportAzdAsync()
+    {
+        await Run(async () =>
+        {
+            var outputs = AzdEnvironmentImporter.Parse(await AzdEnvironmentImporter.RunAzdAsync(cancellationToken: stop.Token));
+            draft = AzdEnvironmentImporter.Apply(draft ?? ProviderSettingsDefaults.Local(tier, manifest), outputs, cloudSpeech: cloudSpeech);
+            allowCloud = true;
+            azureSummary = "Imported " + string.Join(", ", draft.Chat.Tiers.Select(t => t.Name + "=" + t.Model)) + ".";
+        });
+    }
+
+    void ApplyEndpoint()
+    {
+        error = null;
+        if (!FoundryEndpoints.TryNormalizeRoot(endpoint, out var root, out var problem)) { error = problem; return; }
+        var azure = new ConnectionSettings
+        {
+            Id = ProviderSettingsDefaults.AzureConnectionId, Kind = ConnectionKind.Foundry, Endpoint = root.AbsoluteUri,
+            Auth = authMode == "api-key" ? AuthMode.ApiKey : AuthMode.Entra
+        };
+        if (azure.Auth == AuthMode.ApiKey && !CredentialFactory.HasApiKey(azure.Id))
+        {
+            error = $"No API key found. Set {CredentialFactory.ApiKeyEnvironmentVariable(azure.Id)} or run: dotnet user-secrets set \"{CredentialFactory.ApiKeyUserSecretName(azure.Id)}\" <key> --id {CredentialFactory.UserSecretsId}";
+            return;
+        }
+        draft = ProviderSettingsDefaults.WithAzure(draft ?? ProviderSettingsDefaults.Local(tier, manifest), azure, allowCloud: true, cloudSpeech: cloudSpeech);
+        allowCloud = true;
+        azureSummary = $"Using {root.Host} with {(azure.Auth == AuthMode.Entra ? "Microsoft Entra" : "API key")} authentication and default deployment names.";
+    }
+
+    sealed record Row(string Label, string Uses, string Prefix);
+
+    IEnumerable<Row> Rows()
+    {
+        var settings = draft!;
+        foreach (var t in settings.Chat.Tiers) yield return new($"Chat · {t.Name}", $"{t.Connection} · {t.Model}", "chat:" + t.Name);
+        if (settings.Vision is { } vision) yield return new("Vision", $"{vision.Connection} · {vision.Model}", "vision");
+        if (settings.Embeddings is { } embeddings) yield return new("Embeddings", $"{embeddings.Connection} · {embeddings.Model}", "embeddings");
+        yield return new("Documents", "configured candidates", "documents");
+        yield return new("Narration", settings.Speech.Tts.Provider.ToString(), "speech:tts");
+        yield return new("Transcription", settings.Speech.Stt.Provider.ToString(), "speech:stt");
+        yield return new("Live speech", settings.Speech.Live.Provider.ToString(), "speech:live");
+        yield return new("Decisions", "Julia (local)" + (settings.Privacy.AllowCloud ? " · cloud fallback" : ""), "decisions");
+        if (ProviderSettingsDefaults.UsesCopilot(settings))
+            yield return new("GitHub Copilot", $"{(settings.Agents.Copilot.Backend == CopilotBackend.Byok ? "BYOK · " + settings.Agents.Copilot.ByokConnection : "subscription")} · {settings.Agents.Copilot.Model ?? "default model"}", "copilot.");
+        yield return new("Images", settings.Images.Mode == ImageMode.Png ? "Foundry PNG · " + settings.Images.Deployment : "SVG (chat-authored)", "images");
+    }
+
+    string RowStatus(string prefix)
+    {
+        if (checks is null) return "not tested";
+        var matching = checks.Where(c => c.Role.StartsWith(prefix, StringComparison.Ordinal)).ToArray();
+        if (matching.Length == 0) return "—";
+        return string.Join("; ", matching.Select(c => $"{c.Symbol} {c.Detail}{(c.Status == RoleCheckStatus.Failed && c.Remediation is { } fix ? " — " + fix : "")}"));
+    }
+
+    async Task TestAsync()
+    {
+        await Run(async () =>
+        {
+            ProviderSettingsValidator.ThrowIfInvalid(draft!);
+            checks = await new ConfigurationTester(assets: assets, extensions: [new CopilotConfigurationCheck(), new MediaStudio.Sources.DocumentConfigurationCheck()]).TestAsync(draft!, cancellationToken: stop.Token);
+        });
+    }
+
+    async Task SaveAsync()
+    {
+        await Run(async () =>
+        {
+            Setup.Store.Save(draft!);
+            await Workspace.ConfigureModelsAsync(ProviderSettingsProjection.Apply(draft!, Workspace.Providers.State), changeSpeech: false);
+            saved = true;
+            await Completed.InvokeAsync();
+        });
+    }
+
+    string[] ByokConnections => draft?.Connections.Where(c => c.Kind != ConnectionKind.GitHubCopilot).Select(c => c.Id).ToArray() ?? [];
+
+    async Task OpenCopilotAsync()
+    {
+        var copilot = draft!.Agents.Copilot;
+        copilotByok = copilot.Backend == CopilotBackend.Byok;
+        byokConnection = copilot.ByokConnection ?? ByokConnections.FirstOrDefault();
+        copilotModel = copilot.Model;
+        copilotTier = draft.Chat.Tiers.Any(t => t.Name == ChatTierNames.Copilot);
+        copilotRuntime = draft.Agents.Authoring.Runtime == AgentRuntime.Copilot;
+        step = 5;
+        await ProbeCopilotAsync();
+    }
+
+    async Task ProbeCopilotAsync()
+    {
+        await Run(async () =>
+        {
+            if (copilotClients is not null) await copilotClients.DisposeAsync();
+            var probeSettings = ProviderSettingsDefaults.WithCopilot(draft!, copilotModel, byokConnection: copilotByok ? byokConnection : null);
+            copilotClients = new CopilotClientFactory(probeSettings);
+            copilotStatus = null;
+            copilotStatus = await new CopilotProbe(copilotClients).ProbeAsync(stop.Token);
+            if (copilotModel is null || !copilotStatus.Models.Contains(copilotModel)) copilotModel = CopilotProbe.DefaultModel(copilotStatus.Models) ?? copilotModel;
+        });
+    }
+
+    string CopilotStatusText() => copilotStatus switch
+    {
+        null => "Checking GitHub Copilot…",
+        { Ready: true } s when copilotByok => $"✅ BYOK ready on '{byokConnection}' ({s.Models.Length} model(s)).",
+        { Ready: true } s => $"✅ Signed in{(s.Login is null ? "" : " as " + s.Login)} · {s.Models.Length} model(s) available to you.",
+        var s => "❌ " + (s.Remediation ?? "Not ready.")
+    };
+
+    async Task SetByokAsync(bool byok) { copilotByok = byok; if (byok) copilotTier = false; await ProbeCopilotAsync(); }
+
+    async Task SelectByokAsync(ChangeEventArgs e) { byokConnection = (string?)e.Value; await ProbeCopilotAsync(); }
+
+    async Task SetCopilotCloudAsync(ChangeEventArgs e)
+    {
+        allowCloud = (bool)e.Value!;
+        draft = draft! with { Privacy = draft.Privacy with { AllowCloud = allowCloud } };
+        await ProbeCopilotAsync();
+    }
+
+    async Task SignInAsync()
+    {
+        if (copilotClients is null || signIn is not null) return;
+        error = null; copilotMessage = null;
+        signIn = CancellationTokenSource.CreateLinkedTokenSource(stop.Token);
+        System.Diagnostics.Process? login = null;
+        try
+        {
+            login = CopilotDeviceLogin.StartLogin(copilotClients);
+            deviceCode = await CopilotDeviceLogin.ReadCodeAsync(login.StandardOutput, TimeSpan.FromSeconds(30), signIn.Token);
+            if (deviceCode is null)
+            {
+                // The CLI output format changed or it needs a terminal: fall back to a visible `copilot login` console.
+                if (!login.HasExited) login.Kill(entireProcessTree: true);
+                CopilotDeviceLogin.StartVisibleLogin(copilotClients).Dispose();
+                copilotMessage = "Finish signing in in the console window that opened.";
+            }
+            else OpenBrowser(deviceCode.VerificationUri);
+            StateHasChanged();
+            var probe = new CopilotProbe(copilotClients);
+            var ok = await CopilotDeviceLogin.WaitForSignInAsync(async ct => (await probe.ProbeAsync(ct)).Authenticated, cancellationToken: signIn.Token);
+            copilotMessage = ok ? null : "Sign-in timed out after 5 minutes. Try again.";
+        }
+        catch (OperationCanceledException) { copilotMessage = "Sign-in cancelled."; }
+        catch (Exception e) when (e is VideoProduction.VideoException or System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
+        {
+            error = e.Message;
+        }
+        finally
+        {
+            if (login is { HasExited: false }) login.Kill(entireProcessTree: true);
+            login?.Dispose();
+            deviceCode = null;
+            signIn.Dispose(); signIn = null;
+        }
+        if (!stop.IsCancellationRequested) await ProbeCopilotAsync();
+    }
+
+    async Task SignOutAsync()
+    {
+        await Run(async () =>
+        {
+            using (var logout = CopilotDeviceLogin.StartLogout(copilotClients!)) await logout.WaitForExitAsync(stop.Token);
+            draft = ProviderSettingsDefaults.WithoutCopilot(draft!);
+            copilotTier = copilotRuntime = false;
+        });
+        await ProbeCopilotAsync();
+    }
+
+    async Task CopyCodeAsync()
+    {
+        if (deviceCode is null) return;
+        try { await Microsoft.JSInterop.JSRuntimeExtensions.InvokeVoidAsync(JS, "navigator.clipboard.writeText", deviceCode.UserCode); }
+        catch (Microsoft.JSInterop.JSException) { copilotMessage = "Copy failed; type the code shown above."; }
+    }
+
+    static void OpenBrowser(Uri uri) =>
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true })?.Dispose();
+
+    void ApplyCopilot()
+    {
+        error = null;
+        try
+        {
+            draft = ProviderSettingsDefaults.WithCopilot(draft!, copilotModel, copilotTier && !copilotByok, copilotRuntime,
+                draft!.Agents.Illustration.Runtime == AgentRuntime.Copilot, copilotByok ? byokConnection : null);
+            step = 4;
+        }
+        catch (ArgumentException e) { error = e.Message; }
+    }
+
+    void RemoveCopilot() { draft = ProviderSettingsDefaults.WithoutCopilot(draft!); step = 4; }
+
+    async Task Run(Func<Task> action)
+    {
+        if (busy) return;
+        busy = true; error = null; StateHasChanged();
+        try { await action(); }
+        catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
+        catch (Exception e) when (e is InvalidOperationException or InvalidDataException or IOException or HttpRequestException
+                                       or ArgumentException or KeyNotFoundException or UnauthorizedAccessException or TaskCanceledException
+                                       or System.ComponentModel.Win32Exception or ProviderSettingsValidationException)
+        {
+            error = e.Message;
+        }
+        finally { busy = false; StateHasChanged(); }
+    }
+
+    public void Dispose()
+    {
+        stop.Cancel();
+        copilotClients?.Dispose();
+        stop.Dispose();
+    }
+}

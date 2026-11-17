@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="MediaStudio.Tests" />
+    <ProjectReference Include="..\MediaStudio.Configuration\MediaStudio.Configuration.csproj" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" />
+    <PackageReference Include="System.Numerics.Tensors" />
+    <PackageReference Include="Whisper.net" />
+    <PackageReference Include="Whisper.net.Runtime" />
+  </ItemGroup>
+</Project>

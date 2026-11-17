@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "audio-candidate",
+  "requestSha256": "407844fdfa99db486b5725729f2ebc2c376868106f4992b19351dc83b79f597e",
+  "approvalSha256": "817d5fac9e79aaf3d77754b030442f3b2c1e0c40401cb0fb30e2255661d8d42a",
+  "masterPath": "master.wav",
+  "masterSha256": "8f19d75fd9b9b7d999f3e0fd112aab229ab2b17869e73b7bf8a6630fc6773c4e",
+  "sampleRate": 16000,
+  "sampleCount": 20000,
+  "transcriptSha256": "fe51accb19cc3c0e59ce4212de58bc5b806aeacf76495614d59de45d3ca10008",
+  "parts": [
+    {
+      "id": "introduction",
+      "text": "Synthetic fixture: two audible tones, not synthesized speech.",
+      "startSample": 0,
+      "endSample": 8000,
+      "pauseAfterSamples": 2000,
+      "takePath": "takes/introduction/narration.wav",
+      "takeSha256": "83f50a5d71d438d1795fed3f1507935c3daeb545e1d146d1f1b998564fd56a71",
+      "metadataPath": "takes/introduction/speech.json",
+      "metadataSha256": "986972ce2ceb7538acdd22cbac0d655dfd5a874239423aa0fdff37dd918e8bef"
+    },
+    {
+      "id": "conclusion",
+      "text": "This tests independent audio composition and exact sample clocks only.",
+      "startSample": 10000,
+      "endSample": 18000,
+      "pauseAfterSamples": 2000,
+      "takePath": "takes/conclusion/narration.wav",
+      "takeSha256": "67b547c67cf1a3dcc79d78cfe0be6b8876e75afe8b9044a7a16cecf05a6b8870",
+      "metadataPath": "takes/conclusion/speech.json",
+      "metadataSha256": "47c4287281ce00040b6bb0b2bbca7c093d5dd947f2d03661aba9740ddc925335"
+    }
+  ],
+  "interpretation": "Reviewed script on actual synthesis take sample ranges, with real PCM silence pauses. Not an ASR transcript, acoustic certification, release approval or publication.",
+  "outcome": {
+    "status": "completed",
+    "masterSha256": "8f19d75fd9b9b7d999f3e0fd112aab229ab2b17869e73b7bf8a6630fc6773c4e",
+    "sampleCount": 20000,
+    "code": null,
+    "message": null
+  }
+}

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Media.Narration\Media.Narration.csproj" />
+  </ItemGroup>
+</Project>

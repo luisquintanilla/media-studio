@@ -1,0 +1,152 @@
+@namespace MediaStudio.App.Components
+@implements IDisposable
+<div class="voice-controls" aria-label="Voice input">
+    @if (localError is { } actionError && actionError != Voice.Error) { <p role="alert">@actionError</p> }
+    <button class="icon-button" data-voice-record aria-label="@(NeedsSetup ? "Set up voice input" : "Record microphone")"
+        title="@(NeedsSetup ? "Open speech Settings" : Voice.UnavailableReason ?? "Record voice (maximum 60 seconds). Stop adds final text.")"
+        disabled="@(Busy || Voice.InputPending || !NeedsSetup && Voice.Devices == 0)" @onclick="Record">
+        <StudioIcon Name="mic" />
+    </button>
+    @if (!Voice.Configured) { <button class="text-button" @onclick="SetupRequested">Set up voice</button> }
+    @if (Voice.Recording)
+    {
+        <div class="voice-recording" data-voice-recording>
+            <span class="recording-dot" aria-hidden="true"></span><strong role="status" aria-live="polite">@(Voice.IsCloud ? "Recording and uploading to cloud" : "Recording on this device")</strong>
+            <time aria-live="off" aria-label="Elapsed recording time">@Voice.Elapsed.ToString(@"mm\:ss") / 01:00</time>
+        </div>
+    }
+    @if (Voice.Initializing || Voice.Recording || Voice.HasRecording || Voice.Transcribing || Voice.Transcript is not null || Voice.Error is not null)
+    {
+        <div class="voice-panel" role="status">
+            @if (!Voice.Recording && Voice.Transcript is null) { <strong>@Voice.Status</strong> }
+            <div class="actions">
+                @if (Voice.Recording) { <button data-voice-stop @onclick="Stop">Stop and add to prompt</button> }
+                @if (Voice.HasRecording && !Voice.Busy) { <button data-voice-retry disabled="@(Busy || Voice.IsCloud && !Voice.CloudUploadAllowed)" @onclick="Transcribe">Retry transcription</button> }
+                @if (Voice.Transcribing || Voice.Initializing) { <button data-voice-cancel @onclick="Voice.Cancel">Cancel transcription</button> }
+                <button data-voice-discard disabled="@(Voice.Transcribing || Voice.Initializing)" @onclick="Discard">Discard</button>
+            </div>
+            @if (Voice.Error is { } error) { <p role="alert">@error</p> }
+            @if (Voice.ProvisionalText is { Length: > 0 } provisional)
+            { <div data-voice-provisional aria-live="off"><strong>Live text</strong><p>@provisional</p></div> }
+            @if (Voice.Transcript is { } transcript)
+            {
+                <p class="voice-transcript">@transcript</p>
+                @if (pendingText is not null && !Ready) { <p data-voice-pending role="status">Dictation is ready. It will be added when the current work finishes; nothing is sent.</p> }
+                @if (Voice.AwaitingInsertion && !MatchingTarget) { <p role="status">Dictation is retained for its original prompt. Return there to add it automatically, or discard it.</p> }
+                @if (!inserted && InsertRequested.HasDelegate && (Voice.AwaitingInsertion || Voice.InsertionTarget is null)) { <button data-voice-insert disabled="@(!Ready)" @onclick="() => Insert(transcript)">Add to prompt</button> }
+            }
+        </div>
+    }
+</div>
+@code {
+    [Parameter, EditorRequired] public VoiceInput Voice { get; set; } = null!;
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public Func<bool>? InsertionReady { get; set; }
+    [Parameter] public string? InsertionTarget { get; set; }
+    [Parameter] public string ComposerText { get; set; } = "";
+    [Parameter] public EventCallback SetupRequested { get; set; }
+    [Parameter] public EventCallback<string> InsertRequested { get; set; }
+    long observedVersion;
+    long ownedRecordingVersion;
+    long pendingVersion;
+    string? pendingText;
+    string? failedComposerText;
+    long failedVersion;
+    bool insertionFailed;
+    bool disposed, inserted, inserting;
+    bool MatchingTarget => Voice.InsertionTarget is null || Voice.InsertionTarget == InsertionTarget;
+    bool NeedsSetup => !Voice.Configured || Voice.IsCloud && !Voice.CloudUploadAllowed;
+    bool Ready => !Busy && !Voice.Busy && MatchingTarget && (InsertionReady?.Invoke() ?? true);
+    protected override void OnInitialized()
+    {
+        observedVersion = Voice.TranscriptVersion;
+        inserted = Voice.Transcript is not null && !Voice.AwaitingInsertion && Voice.InsertionTarget is not null;
+        Voice.Changed += VoiceChanged;
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Voice.AwaitingInsertion && Voice.Transcript is { } text && InsertionTarget is not null
+            && Voice.InsertionTarget == InsertionTarget && InsertRequested.HasDelegate)
+        {
+            ownedRecordingVersion = Voice.RecordingVersion;
+            pendingText = text;
+            pendingVersion = Voice.TranscriptVersion;
+        }
+        await TryInsertPending();
+    }
+    void VoiceChanged() => _ = InvokeAsync(async () =>
+    {
+        if (disposed) return;
+        if (Voice.Transcript is { } text && Voice.TranscriptVersion > observedVersion)
+        {
+            observedVersion = Voice.TranscriptVersion;
+            if (Voice.AwaitingInsertion && ownedRecordingVersion > 0 && Voice.RecordingVersion == ownedRecordingVersion && InsertRequested.HasDelegate)
+            {
+                pendingText = text;
+                pendingVersion = Voice.TranscriptVersion;
+                await TryInsertPending();
+            }
+        }
+        if (Voice.Transcript is null) pendingText = null;
+        StateHasChanged();
+    });
+    async Task TryInsertPending()
+    {
+        if (disposed || inserting || !Ready || !Voice.AwaitingInsertion || pendingText is null) return;
+        if (pendingVersion != Voice.TranscriptVersion || Voice.RecordingVersion != ownedRecordingVersion)
+        { pendingText = null; return; }
+        if (insertionFailed && failedVersion == pendingVersion && failedComposerText == ComposerText) return;
+        await Insert(pendingText);
+    }
+    async Task Insert(string text)
+    {
+        if (!Ready || inserting || disposed || inserted || Voice.InsertionTarget is not null && !Voice.AwaitingInsertion) return;
+        inserting = true;
+        var version = Voice.TranscriptVersion;
+        try
+        {
+            await InsertRequested.InvokeAsync(text);
+            pendingText = null; inserted = true; localError = null; insertionFailed = false;
+            Voice.MarkInserted(version);
+        }
+        catch (Exception error)
+        {
+            localError = "Could not add dictation to the prompt: " + error.Message; inserted = false;
+            insertionFailed = true; failedVersion = version; failedComposerText = ComposerText;
+        }
+        finally { inserting = false; }
+    }
+    async Task Record()
+    {
+        if (Busy || Voice.InputPending) return;
+        if (NeedsSetup) await SetupRequested.InvokeAsync();
+        else
+        {
+            inserted = false; pendingText = null; insertionFailed = false;
+            try { localError = null; await Voice.StartAsync(InsertionTarget, Voice.CloudUploadAllowed); ownedRecordingVersion = Voice.RecordingVersion; }
+            catch (Exception error) { localError = error.Message; }
+        }
+    }
+    void Act(Action action)
+    {
+        try { localError = null; action(); }
+        catch (Exception error) { localError = error.Message; }
+    }
+    string? localError;
+    async Task Discard()
+    {
+        try { localError = null; await Voice.DiscardAsync(); }
+        catch (Exception error) { localError = error.Message; }
+    }
+    async Task Stop()
+    {
+        try { localError = null; await Voice.StopAndTranscribeAsync(); }
+        catch (Exception error) { localError = error.Message; }
+    }
+    async Task Transcribe()
+    {
+        try { localError = null; ownedRecordingVersion = Voice.RecordingVersion; await Voice.TranscribeAsync(Voice.CloudUploadAllowed); }
+        catch (Exception error) { localError = error.Message; }
+    }
+    public void Dispose() { disposed = true; Voice.Changed -= VoiceChanged; }
+}

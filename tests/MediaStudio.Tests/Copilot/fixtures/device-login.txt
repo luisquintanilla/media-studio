@@ -1,0 +1,3 @@
+Waiting for authentication...
+To sign in, open https://github.com/login/device in your browser
+and enter the one-time code: AB12-CD34

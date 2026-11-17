@@ -1,0 +1,33 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,razor}]
+indent_size = 4
+
+[*.{csproj,props,targets,slnx,xml,json,yml,yaml,bicep,md}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# The code base uses compact single-line blocks and statements (`{ a; b; }`, `if (x) return;`); keep them.
+[*.cs]
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = true
+csharp_new_line_before_open_brace = types, methods, properties, accessors, anonymous_methods, anonymous_types, control_blocks, lambdas, local_functions
+csharp_new_line_before_members_in_object_initializers = false
+csharp_new_line_before_members_in_anonymous_types = false
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_using_directive_placement = outside_namespace
+dotnet_sort_system_directives_first = true

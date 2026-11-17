@@ -1,0 +1,1673 @@
+{
+  "scope": "Bounded native mapping sanity, not a video quality benchmark or route-balance objective. No generation/cloud calls.",
+  "timestamp": "2026-10-28T20:02:52.4826004+00:00",
+  "model": "SupersonicLabs/Julia-1-ONNX",
+  "revision": "82a2fadf8fccfccdc5fd4e1009ba8f1a265eb7a8",
+  "contractRevision": "e87f1126cf22108fb27f6391c7826fb91c25138e",
+  "providerRevision": "ce28e92b338b0edfbc22cca3c62101fa75c008f7",
+  "manifestFingerprint": "f1360e9e09fad7ec986e9d868db420e8242d62e86bc8ff4615dc1886768fcd6a",
+  "dependencies": "Microsoft.Extensions.AI.Abstractions/10.11.0; Microsoft.ML.OnnxRuntime/1.23.2; Tokenizers.HuggingFace/3.23.1; System.Numerics.Tensors/10.0.9",
+  "operatingSystem": "Microsoft Windows 10.0.26200",
+  "processArchitecture": "X64",
+  "platformScope": "Windows CPU only. No Ubuntu/Linux parity, AOT or task-quality claim.",
+  "nativeCalls": 6,
+  "structuralAssertions": 25,
+  "positiveAndNegativeNormalChoicesDiffer": true,
+  "allKnownAnswersMatched": true,
+  "observations": [
+    {
+      "scenario": "positive",
+      "reversed": false,
+      "state": {
+        "brief": "I love this wonderful movie. It was delightful and made me happy."
+      },
+      "questionId": "decision",
+      "instructions": "What is the sentiment of the text?",
+      "candidates": [
+        {
+          "id": "sentiment-positive",
+          "description": "The text expresses positive sentiment."
+        },
+        {
+          "id": "sentiment-negative",
+          "description": "The text expresses negative sentiment."
+        }
+      ],
+      "knownAnswer": "sentiment-positive",
+      "selectedId": "sentiment-positive",
+      "knownAnswerMatched": true,
+      "encodedStateText": "{\u0022brief\u0022: \u0022I love this wonderful movie. It was delightful and made me happy.\u0022}",
+      "encodedHeadText": "choice question: What is the sentiment of the text?",
+      "encodedOptionTexts": [
+        " The text expresses positive sentiment.",
+        " The text expresses negative sentiment."
+      ],
+      "stateTokenIds": [
+        19946,
+        27153,
+        1192,
+        664,
+        235285,
+        2182,
+        736,
+        10920,
+        7344,
+        235265,
+        1165,
+        729,
+        45687,
+        578,
+        1644,
+        682,
+        4915,
+        1464,
+        235270
+      ],
+      "headTokenIds": [
+        6241,
+        2872,
+        235292,
+        2439,
+        603,
+        573,
+        25627,
+        576,
+        573,
+        2793,
+        235336
+      ],
+      "optionTokenIds": [
+        [
+          714,
+          2793,
+          55620,
+          6222,
+          25627,
+          235265
+        ],
+        [
+          714,
+          2793,
+          55620,
+          8322,
+          25627,
+          235265
+        ]
+      ],
+      "inputs": [
+        {
+          "name": "input_ids",
+          "elementType": "int64",
+          "shape": [
+            1,
+            48
+          ],
+          "int64Values": [
+            2,
+            6241,
+            2872,
+            235292,
+            2439,
+            603,
+            573,
+            25627,
+            576,
+            573,
+            2793,
+            235336,
+            1,
+            4,
+            714,
+            2793,
+            55620,
+            6222,
+            25627,
+            235265,
+            4,
+            714,
+            2793,
+            55620,
+            8322,
+            25627,
+            235265,
+            1,
+            19946,
+            27153,
+            1192,
+            664,
+            235285,
+            2182,
+            736,
+            10920,
+            7344,
+            235265,
+            1165,
+            729,
+            45687,
+            578,
+            1644,
+            682,
+            4915,
+            1464,
+            235270,
+            1
+          ],
+          "boolValues": null,
+          "sha256": "5409d6fd65d6603ecbb96da853c439aabae9c8414c4a6cbf33fe27f58c8c2b43"
+        },
+        {
+          "name": "attention_mask",
+          "elementType": "int64",
+          "shape": [
+            1,
+            48
+          ],
+          "int64Values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "boolValues": null,
+          "sha256": "989fc25a5c180f7373d60461ae33ebfd356010bfbe160160621586716a57154c"
+        },
+        {
+          "name": "marker_pos",
+          "elementType": "int64",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": [
+            13,
+            20
+          ],
+          "boolValues": null,
+          "sha256": "39c14eb9074302817f60815b5a1c3e072f2076f78e6f8f230db724481f2859ae"
+        },
+        {
+          "name": "marker_mask",
+          "elementType": "bool",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": null,
+          "boolValues": [
+            true,
+            true
+          ],
+          "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2"
+        },
+        {
+          "name": "qtype",
+          "elementType": "int64",
+          "shape": [
+            1
+          ],
+          "int64Values": [
+            0
+          ],
+          "boolValues": null,
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+        }
+      ],
+      "outputName": "logits",
+      "outputShape": [
+        1,
+        2
+      ],
+      "rawLogits": [
+        1.5882052,
+        -7.4617023
+      ],
+      "outputSha256": "082e6d9fbc51c7e07a398b4382bd3eb624c9b83952364dc5f0ab31f524160e8a",
+      "winnerIndex": 0,
+      "probabilities": [
+        {
+          "id": "sentiment-positive",
+          "value": 0.9998826118931381
+        },
+        {
+          "id": "sentiment-negative",
+          "value": 0.00011738810686199002
+        }
+      ],
+      "milliseconds": 134.6267
+    },
+    {
+      "scenario": "positive",
+      "reversed": true,
+      "state": {
+        "brief": "I love this wonderful movie. It was delightful and made me happy."
+      },
+      "questionId": "decision",
+      "instructions": "What is the sentiment of the text?",
+      "candidates": [
+        {
+          "id": "sentiment-negative",
+          "description": "The text expresses negative sentiment."
+        },
+        {
+          "id": "sentiment-positive",
+          "description": "The text expresses positive sentiment."
+        }
+      ],
+      "knownAnswer": "sentiment-positive",
+      "selectedId": "sentiment-positive",
+      "knownAnswerMatched": true,
+      "encodedStateText": "{\u0022brief\u0022: \u0022I love this wonderful movie. It was delightful and made me happy.\u0022}",
+      "encodedHeadText": "choice question: What is the sentiment of the text?",
+      "encodedOptionTexts": [
+        " The text expresses negative sentiment.",
+        " The text expresses positive sentiment."
+      ],
+      "stateTokenIds": [
+        19946,
+        27153,
+        1192,
+        664,
+        235285,
+        2182,
+        736,
+        10920,
+        7344,
+        235265,
+        1165,
+        729,
+        45687,
+        578,
+        1644,
+        682,
+        4915,
+        1464,
+        235270
+      ],
+      "headTokenIds": [
+        6241,
+        2872,
+        235292,
+        2439,
+        603,
+        573,
+        25627,
+        576,
+        573,
+        2793,
+        235336
+      ],
+      "optionTokenIds": [
+        [
+          714,
+          2793,
+          55620,
+          8322,
+          25627,
+          235265
+        ],
+        [
+          714,
+          2793,
+          55620,
+          6222,
+          25627,
+          235265
+        ]
+      ],
+      "inputs": [
+        {
+          "name": "input_ids",
+          "elementType": "int64",
+          "shape": [
+            1,
+            48
+          ],
+          "int64Values": [
+            2,
+            6241,
+            2872,
+            235292,
+            2439,
+            603,
+            573,
+            25627,
+            576,
+            573,
+            2793,
+            235336,
+            1,
+            4,
+            714,
+            2793,
+            55620,
+            8322,
+            25627,
+            235265,
+            4,
+            714,
+            2793,
+            55620,
+            6222,
+            25627,
+            235265,
+            1,
+            19946,
+            27153,
+            1192,
+            664,
+            235285,
+            2182,
+            736,
+            10920,
+            7344,
+            235265,
+            1165,
+            729,
+            45687,
+            578,
+            1644,
+            682,
+            4915,
+            1464,
+            235270,
+            1
+          ],
+          "boolValues": null,
+          "sha256": "d07766ba86e9c55ec9c0650ddccb8888c487405874aba24750b9df7bb7020df1"
+        },
+        {
+          "name": "attention_mask",
+          "elementType": "int64",
+          "shape": [
+            1,
+            48
+          ],
+          "int64Values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "boolValues": null,
+          "sha256": "989fc25a5c180f7373d60461ae33ebfd356010bfbe160160621586716a57154c"
+        },
+        {
+          "name": "marker_pos",
+          "elementType": "int64",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": [
+            13,
+            20
+          ],
+          "boolValues": null,
+          "sha256": "39c14eb9074302817f60815b5a1c3e072f2076f78e6f8f230db724481f2859ae"
+        },
+        {
+          "name": "marker_mask",
+          "elementType": "bool",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": null,
+          "boolValues": [
+            true,
+            true
+          ],
+          "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2"
+        },
+        {
+          "name": "qtype",
+          "elementType": "int64",
+          "shape": [
+            1
+          ],
+          "int64Values": [
+            0
+          ],
+          "boolValues": null,
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+        }
+      ],
+      "outputName": "logits",
+      "outputShape": [
+        1,
+        2
+      ],
+      "rawLogits": [
+        -5.3512073,
+        0.37730545
+      ],
+      "outputSha256": "3640069662eaea6fd2f9a74839cbd97539e77c922b86f672994c5d2818bbb148",
+      "winnerIndex": 1,
+      "probabilities": [
+        {
+          "id": "sentiment-negative",
+          "value": 0.003241369547845688
+        },
+        {
+          "id": "sentiment-positive",
+          "value": 0.9967586304521543
+        }
+      ],
+      "milliseconds": 40.2034
+    },
+    {
+      "scenario": "negative",
+      "reversed": false,
+      "state": {
+        "brief": "I hate this terrible movie. It was awful and made me miserable."
+      },
+      "questionId": "decision",
+      "instructions": "What is the sentiment of the text?",
+      "candidates": [
+        {
+          "id": "sentiment-positive",
+          "description": "The text expresses positive sentiment."
+        },
+        {
+          "id": "sentiment-negative",
+          "description": "The text expresses negative sentiment."
+        }
+      ],
+      "knownAnswer": "sentiment-negative",
+      "selectedId": "sentiment-negative",
+      "knownAnswerMatched": true,
+      "encodedStateText": "{\u0022brief\u0022: \u0022I hate this terrible movie. It was awful and made me miserable.\u0022}",
+      "encodedHeadText": "choice question: What is the sentiment of the text?",
+      "encodedOptionTexts": [
+        " The text expresses positive sentiment.",
+        " The text expresses negative sentiment."
+      ],
+      "stateTokenIds": [
+        19946,
+        27153,
+        1192,
+        664,
+        235285,
+        10874,
+        736,
+        16744,
+        7344,
+        235265,
+        1165,
+        729,
+        27976,
+        578,
+        1644,
+        682,
+        48747,
+        1464,
+        235270
+      ],
+      "headTokenIds": [
+        6241,
+        2872,
+        235292,
+        2439,
+        603,
+        573,
+        25627,
+        576,
+        573,
+        2793,
+        235336
+      ],
+      "optionTokenIds": [
+        [
+          714,
+          2793,
+          55620,
+          6222,
+          25627,
+          235265
+        ],
+        [
+          714,
+          2793,
+          55620,
+          8322,
+          25627,
+          235265
+        ]
+      ],
+      "inputs": [
+        {
+          "name": "input_ids",
+          "elementType": "int64",
+          "shape": [
+            1,
+            48
+          ],
+          "int64Values": [
+            2,
+            6241,
+            2872,
+            235292,
+            2439,
+            603,
+            573,
+            25627,
+            576,
+            573,
+            2793,
+            235336,
+            1,
+            4,
+            714,
+            2793,
+            55620,
+            6222,
+            25627,
+            235265,
+            4,
+            714,
+            2793,
+            55620,
+            8322,
+            25627,
+            235265,
+            1,
+            19946,
+            27153,
+            1192,
+            664,
+            235285,
+            10874,
+            736,
+            16744,
+            7344,
+            235265,
+            1165,
+            729,
+            27976,
+            578,
+            1644,
+            682,
+            48747,
+            1464,
+            235270,
+            1
+          ],
+          "boolValues": null,
+          "sha256": "6fc3dc93278a4644ce61acadb41d3e79d0cac4522d0ca713816388ce3b381b02"
+        },
+        {
+          "name": "attention_mask",
+          "elementType": "int64",
+          "shape": [
+            1,
+            48
+          ],
+          "int64Values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "boolValues": null,
+          "sha256": "989fc25a5c180f7373d60461ae33ebfd356010bfbe160160621586716a57154c"
+        },
+        {
+          "name": "marker_pos",
+          "elementType": "int64",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": [
+            13,
+            20
+          ],
+          "boolValues": null,
+          "sha256": "39c14eb9074302817f60815b5a1c3e072f2076f78e6f8f230db724481f2859ae"
+        },
+        {
+          "name": "marker_mask",
+          "elementType": "bool",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": null,
+          "boolValues": [
+            true,
+            true
+          ],
+          "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2"
+        },
+        {
+          "name": "qtype",
+          "elementType": "int64",
+          "shape": [
+            1
+          ],
+          "int64Values": [
+            0
+          ],
+          "boolValues": null,
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+        }
+      ],
+      "outputName": "logits",
+      "outputShape": [
+        1,
+        2
+      ],
+      "rawLogits": [
+        -4.679178,
+        3.5417368
+      ],
+      "outputSha256": "0c28e7e4814a93554ccc56f0fe835857ec6fe42a9df25ef8748f1e48137da6fa",
+      "winnerIndex": 1,
+      "probabilities": [
+        {
+          "id": "sentiment-positive",
+          "value": 0.00026889649972829165
+        },
+        {
+          "id": "sentiment-negative",
+          "value": 0.9997311035002717
+        }
+      ],
+      "milliseconds": 51.49
+    },
+    {
+      "scenario": "negative",
+      "reversed": true,
+      "state": {
+        "brief": "I hate this terrible movie. It was awful and made me miserable."
+      },
+      "questionId": "decision",
+      "instructions": "What is the sentiment of the text?",
+      "candidates": [
+        {
+          "id": "sentiment-negative",
+          "description": "The text expresses negative sentiment."
+        },
+        {
+          "id": "sentiment-positive",
+          "description": "The text expresses positive sentiment."
+        }
+      ],
+      "knownAnswer": "sentiment-negative",
+      "selectedId": "sentiment-negative",
+      "knownAnswerMatched": true,
+      "encodedStateText": "{\u0022brief\u0022: \u0022I hate this terrible movie. It was awful and made me miserable.\u0022}",
+      "encodedHeadText": "choice question: What is the sentiment of the text?",
+      "encodedOptionTexts": [
+        " The text expresses negative sentiment.",
+        " The text expresses positive sentiment."
+      ],
+      "stateTokenIds": [
+        19946,
+        27153,
+        1192,
+        664,
+        235285,
+        10874,
+        736,
+        16744,
+        7344,
+        235265,
+        1165,
+        729,
+        27976,
+        578,
+        1644,
+        682,
+        48747,
+        1464,
+        235270
+      ],
+      "headTokenIds": [
+        6241,
+        2872,
+        235292,
+        2439,
+        603,
+        573,
+        25627,
+        576,
+        573,
+        2793,
+        235336
+      ],
+      "optionTokenIds": [
+        [
+          714,
+          2793,
+          55620,
+          8322,
+          25627,
+          235265
+        ],
+        [
+          714,
+          2793,
+          55620,
+          6222,
+          25627,
+          235265
+        ]
+      ],
+      "inputs": [
+        {
+          "name": "input_ids",
+          "elementType": "int64",
+          "shape": [
+            1,
+            48
+          ],
+          "int64Values": [
+            2,
+            6241,
+            2872,
+            235292,
+            2439,
+            603,
+            573,
+            25627,
+            576,
+            573,
+            2793,
+            235336,
+            1,
+            4,
+            714,
+            2793,
+            55620,
+            8322,
+            25627,
+            235265,
+            4,
+            714,
+            2793,
+            55620,
+            6222,
+            25627,
+            235265,
+            1,
+            19946,
+            27153,
+            1192,
+            664,
+            235285,
+            10874,
+            736,
+            16744,
+            7344,
+            235265,
+            1165,
+            729,
+            27976,
+            578,
+            1644,
+            682,
+            48747,
+            1464,
+            235270,
+            1
+          ],
+          "boolValues": null,
+          "sha256": "9d5274db8950eda8981710298d8311bd3b61c8a9b250580e9ba89db34941f964"
+        },
+        {
+          "name": "attention_mask",
+          "elementType": "int64",
+          "shape": [
+            1,
+            48
+          ],
+          "int64Values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "boolValues": null,
+          "sha256": "989fc25a5c180f7373d60461ae33ebfd356010bfbe160160621586716a57154c"
+        },
+        {
+          "name": "marker_pos",
+          "elementType": "int64",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": [
+            13,
+            20
+          ],
+          "boolValues": null,
+          "sha256": "39c14eb9074302817f60815b5a1c3e072f2076f78e6f8f230db724481f2859ae"
+        },
+        {
+          "name": "marker_mask",
+          "elementType": "bool",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": null,
+          "boolValues": [
+            true,
+            true
+          ],
+          "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2"
+        },
+        {
+          "name": "qtype",
+          "elementType": "int64",
+          "shape": [
+            1
+          ],
+          "int64Values": [
+            0
+          ],
+          "boolValues": null,
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+        }
+      ],
+      "outputName": "logits",
+      "outputShape": [
+        1,
+        2
+      ],
+      "rawLogits": [
+        2.5660737,
+        -3.5016358
+      ],
+      "outputSha256": "f7a722d59ad47d23a0de3156bb194d6a06d6cad11aa21439c77d8d034e8a85ec",
+      "winnerIndex": 0,
+      "probabilities": [
+        {
+          "id": "sentiment-negative",
+          "value": 0.9976888805009267
+        },
+        {
+          "id": "sentiment-positive",
+          "value": 0.002311119499073122
+        }
+      ],
+      "milliseconds": 51.6321
+    },
+    {
+      "scenario": "garden",
+      "reversed": false,
+      "state": {
+        "brief": "Plan a short, straightforward garden tour with three scenes and concise narration."
+      },
+      "questionId": "decision",
+      "instructions": "Choose the appropriate storyboard planning route for this brief.",
+      "candidates": [
+        {
+          "id": "planning-fast",
+          "description": "Straightforward storyboard planning with few constraints."
+        },
+        {
+          "id": "planning-strong",
+          "description": "Demanding storyboard planning with complex constraints."
+        }
+      ],
+      "knownAnswer": null,
+      "selectedId": "planning-fast",
+      "knownAnswerMatched": null,
+      "encodedStateText": "{\u0022brief\u0022: \u0022Plan a short, straightforward garden tour with three scenes and concise narration.\u0022}",
+      "encodedHeadText": "choice question: Choose the appropriate storyboard planning route for this brief.",
+      "encodedOptionTexts": [
+        " Straightforward storyboard planning with few constraints.",
+        " Demanding storyboard planning with complex constraints."
+      ],
+      "stateTokenIds": [
+        19946,
+        27153,
+        1192,
+        664,
+        9058,
+        476,
+        3309,
+        235269,
+        36852,
+        8717,
+        5347,
+        675,
+        2149,
+        19502,
+        578,
+        66004,
+        103788,
+        1464,
+        235270
+      ],
+      "headTokenIds": [
+        6241,
+        2872,
+        235292,
+        19262,
+        573,
+        8348,
+        147488,
+        7945,
+        8750,
+        604,
+        736,
+        9091,
+        235265
+      ],
+      "optionTokenIds": [
+        [
+          53159,
+          15045,
+          147488,
+          7945,
+          675,
+          2619,
+          24278,
+          235265
+        ],
+        [
+          6119,
+          35796,
+          147488,
+          7945,
+          675,
+          5766,
+          24278,
+          235265
+        ]
+      ],
+      "inputs": [
+        {
+          "name": "input_ids",
+          "elementType": "int64",
+          "shape": [
+            1,
+            56
+          ],
+          "int64Values": [
+            2,
+            6241,
+            2872,
+            235292,
+            19262,
+            573,
+            8348,
+            147488,
+            7945,
+            8750,
+            604,
+            736,
+            9091,
+            235265,
+            1,
+            4,
+            53159,
+            15045,
+            147488,
+            7945,
+            675,
+            2619,
+            24278,
+            235265,
+            4,
+            6119,
+            35796,
+            147488,
+            7945,
+            675,
+            5766,
+            24278,
+            235265,
+            1,
+            19946,
+            27153,
+            1192,
+            664,
+            9058,
+            476,
+            3309,
+            235269,
+            36852,
+            8717,
+            5347,
+            675,
+            2149,
+            19502,
+            578,
+            66004,
+            103788,
+            1464,
+            235270,
+            1,
+            0,
+            0
+          ],
+          "boolValues": null,
+          "sha256": "7eee11045b723d867a1f1841e7958a5ed15733c33c9c4f57884eb288c6693dd2"
+        },
+        {
+          "name": "attention_mask",
+          "elementType": "int64",
+          "shape": [
+            1,
+            56
+          ],
+          "int64Values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0
+          ],
+          "boolValues": null,
+          "sha256": "5c290c618bbbab218902653aa7d4c82a19b17992e440e04b2be64a5c8704e143"
+        },
+        {
+          "name": "marker_pos",
+          "elementType": "int64",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": [
+            15,
+            24
+          ],
+          "boolValues": null,
+          "sha256": "01031b734eccca4010b742ece405ef3a7a8b222a163138fb4420b988e0f31750"
+        },
+        {
+          "name": "marker_mask",
+          "elementType": "bool",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": null,
+          "boolValues": [
+            true,
+            true
+          ],
+          "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2"
+        },
+        {
+          "name": "qtype",
+          "elementType": "int64",
+          "shape": [
+            1
+          ],
+          "int64Values": [
+            0
+          ],
+          "boolValues": null,
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+        }
+      ],
+      "outputName": "logits",
+      "outputShape": [
+        1,
+        2
+      ],
+      "rawLogits": [
+        7.6704617,
+        -4.9157915
+      ],
+      "outputSha256": "c4eb3d6eebaf5560cfedea793adcf0bf304f00c4a3bc35d771e2949d6d068465",
+      "winnerIndex": 0,
+      "probabilities": [
+        {
+          "id": "planning-fast",
+          "value": 0.9999965813218413
+        },
+        {
+          "id": "planning-strong",
+          "value": 3.418678158777859E-06
+        }
+      ],
+      "milliseconds": 64.3279
+    },
+    {
+      "scenario": "garden",
+      "reversed": true,
+      "state": {
+        "brief": "Plan a short, straightforward garden tour with three scenes and concise narration."
+      },
+      "questionId": "decision",
+      "instructions": "Choose the appropriate storyboard planning route for this brief.",
+      "candidates": [
+        {
+          "id": "planning-strong",
+          "description": "Demanding storyboard planning with complex constraints."
+        },
+        {
+          "id": "planning-fast",
+          "description": "Straightforward storyboard planning with few constraints."
+        }
+      ],
+      "knownAnswer": null,
+      "selectedId": "planning-fast",
+      "knownAnswerMatched": null,
+      "encodedStateText": "{\u0022brief\u0022: \u0022Plan a short, straightforward garden tour with three scenes and concise narration.\u0022}",
+      "encodedHeadText": "choice question: Choose the appropriate storyboard planning route for this brief.",
+      "encodedOptionTexts": [
+        " Demanding storyboard planning with complex constraints.",
+        " Straightforward storyboard planning with few constraints."
+      ],
+      "stateTokenIds": [
+        19946,
+        27153,
+        1192,
+        664,
+        9058,
+        476,
+        3309,
+        235269,
+        36852,
+        8717,
+        5347,
+        675,
+        2149,
+        19502,
+        578,
+        66004,
+        103788,
+        1464,
+        235270
+      ],
+      "headTokenIds": [
+        6241,
+        2872,
+        235292,
+        19262,
+        573,
+        8348,
+        147488,
+        7945,
+        8750,
+        604,
+        736,
+        9091,
+        235265
+      ],
+      "optionTokenIds": [
+        [
+          6119,
+          35796,
+          147488,
+          7945,
+          675,
+          5766,
+          24278,
+          235265
+        ],
+        [
+          53159,
+          15045,
+          147488,
+          7945,
+          675,
+          2619,
+          24278,
+          235265
+        ]
+      ],
+      "inputs": [
+        {
+          "name": "input_ids",
+          "elementType": "int64",
+          "shape": [
+            1,
+            56
+          ],
+          "int64Values": [
+            2,
+            6241,
+            2872,
+            235292,
+            19262,
+            573,
+            8348,
+            147488,
+            7945,
+            8750,
+            604,
+            736,
+            9091,
+            235265,
+            1,
+            4,
+            6119,
+            35796,
+            147488,
+            7945,
+            675,
+            5766,
+            24278,
+            235265,
+            4,
+            53159,
+            15045,
+            147488,
+            7945,
+            675,
+            2619,
+            24278,
+            235265,
+            1,
+            19946,
+            27153,
+            1192,
+            664,
+            9058,
+            476,
+            3309,
+            235269,
+            36852,
+            8717,
+            5347,
+            675,
+            2149,
+            19502,
+            578,
+            66004,
+            103788,
+            1464,
+            235270,
+            1,
+            0,
+            0
+          ],
+          "boolValues": null,
+          "sha256": "ed723493de7904100fba7902d79dfe4fadb4e82f05fbd534367fbd480dd725b6"
+        },
+        {
+          "name": "attention_mask",
+          "elementType": "int64",
+          "shape": [
+            1,
+            56
+          ],
+          "int64Values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0
+          ],
+          "boolValues": null,
+          "sha256": "5c290c618bbbab218902653aa7d4c82a19b17992e440e04b2be64a5c8704e143"
+        },
+        {
+          "name": "marker_pos",
+          "elementType": "int64",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": [
+            15,
+            24
+          ],
+          "boolValues": null,
+          "sha256": "01031b734eccca4010b742ece405ef3a7a8b222a163138fb4420b988e0f31750"
+        },
+        {
+          "name": "marker_mask",
+          "elementType": "bool",
+          "shape": [
+            1,
+            2
+          ],
+          "int64Values": null,
+          "boolValues": [
+            true,
+            true
+          ],
+          "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2"
+        },
+        {
+          "name": "qtype",
+          "elementType": "int64",
+          "shape": [
+            1
+          ],
+          "int64Values": [
+            0
+          ],
+          "boolValues": null,
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+        }
+      ],
+      "outputName": "logits",
+      "outputShape": [
+        1,
+        2
+      ],
+      "rawLogits": [
+        -6.894532,
+        6.927947
+      ],
+      "outputSha256": "624c82c01a00abd51426fe02e7b30ae38c06323aaa71b0d8a0b2218f8111c70e",
+      "winnerIndex": 1,
+      "probabilities": [
+        {
+          "id": "planning-strong",
+          "value": 9.93054548774944E-07
+        },
+        {
+          "id": "planning-fast",
+          "value": 0.9999990069454513
+        }
+      ],
+      "milliseconds": 68.8135
+    }
+  ],
+  "pairs": [
+    {
+      "scenario": "positive",
+      "normalSelectedId": "sentiment-positive",
+      "reversedSelectedId": "sentiment-positive",
+      "choiceStable": true,
+      "maxProbabilityShiftById": 0.003123981440983803,
+      "maxLogitShiftById": 2.110495090484619
+    },
+    {
+      "scenario": "negative",
+      "normalSelectedId": "sentiment-negative",
+      "reversedSelectedId": "sentiment-negative",
+      "choiceStable": true,
+      "maxProbabilityShiftById": 0.002042222999344978,
+      "maxLogitShiftById": 1.1775424480438232
+    },
+    {
+      "scenario": "garden",
+      "normalSelectedId": "planning-fast",
+      "reversedSelectedId": "planning-fast",
+      "choiceStable": true,
+      "maxProbabilityShiftById": 2.4256236100029146E-06,
+      "maxLogitShiftById": 1.9787406921386719
+    }
+  ]
+}

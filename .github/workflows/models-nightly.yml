@@ -1,0 +1,119 @@
+# Nightly model-backed tests: downloads the pinned local model assets (verified by size + SHA-256 from
+# assets/model-manifest.json), installs espeak-ng, and runs the Julia/Kokoro/Whisper test categories.
+# Optionally starts Ollama for the LocalRuntime category (manual runs only).
+name: Models (nightly)
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+    inputs:
+      local-runtime:
+        description: Also install Ollama and run the LocalRuntime tests
+        type: boolean
+        default: false
+      ollama-model:
+        description: Small Ollama model to pull for the LocalRuntime tests
+        type: string
+        default: qwen3:0.6b
+
+permissions:
+  contents: read
+
+concurrency:
+  group: models-nightly
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+
+jobs:
+  models:
+    name: Julia, Kokoro and Whisper
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      # ModelAssets stores files under %LOCALAPPDATA%\MediaStudio\models; the key changes whenever a pin changes.
+      - name: Cache model assets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/AppData/Local/MediaStudio/models
+          key: models-${{ runner.os }}-${{ hashFiles('assets/model-manifest.json') }}
+
+      # espeak-ng (GPL-3.0) is installed on the runner as a separate executable, never bundled.
+      - name: Install espeak-ng
+        env:
+          ESPEAK_VERSION: 1.52.0
+          ESPEAK_SHA256: 7f673c709ea5dd579d3b5ebb98688cc575328a6ab7438d2bc405b88cedaeafb9
+        run: |
+          $msi = Join-Path $env:RUNNER_TEMP 'espeak-ng.msi'
+          Invoke-WebRequest "https://github.com/espeak-ng/espeak-ng/releases/download/$env:ESPEAK_VERSION/espeak-ng.msi" -OutFile $msi
+          if ((Get-FileHash $msi -Algorithm SHA256).Hash -ne $env:ESPEAK_SHA256) { throw 'espeak-ng.msi checksum mismatch' }
+          $install = Start-Process msiexec.exe -ArgumentList '/i', "`"$msi`"", '/qn', '/norestart' -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "espeak-ng install failed ($($install.ExitCode))" }
+          $exe = Join-Path $env:ProgramFiles 'eSpeak NG\espeak-ng.exe'
+          if (-not (Test-Path $exe)) { throw "espeak-ng not found at $exe" }
+          & $exe --version
+
+      - name: Restore (locked)
+        run: dotnet restore MediaStudio.slnx --locked-mode
+
+      - name: Build
+        run: dotnet build MediaStudio.slnx -c Release --no-restore -warnaserror
+
+      - name: Ensure and verify model assets
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          foreach ($id in 'julia-1', 'kokoro-v1.0-q8', 'whisper-base') {
+            dotnet run --project src/VideoProduction.Cli -c Release --no-build -- assets ensure --id $id
+          }
+          dotnet run --project src/VideoProduction.Cli -c Release --no-build -- assets verify
+
+      - name: Point tests at the Julia tokenizer
+        run: |
+          $manifest = Get-Content assets/model-manifest.json -Raw | ConvertFrom-Json
+          $julia = $manifest.assets | Where-Object id -eq 'julia-1'
+          $tokenizer = Join-Path $env:LOCALAPPDATA "MediaStudio\models\$($julia.dir)\tokenizer.json"
+          if (-not (Test-Path $tokenizer)) { throw "Julia tokenizer not found at $tokenizer" }
+          "MEDIASTUDIO_JULIA_TOKENIZER=$tokenizer" >> $env:GITHUB_ENV
+
+      - name: Install and start Ollama
+        if: inputs.local-runtime
+        env:
+          OLLAMA_MODEL: ${{ inputs.ollama-model }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $setup = Join-Path $env:RUNNER_TEMP 'OllamaSetup.exe'
+          Invoke-WebRequest 'https://ollama.com/download/OllamaSetup.exe' -OutFile $setup
+          Start-Process $setup -ArgumentList '/VERYSILENT', '/NORESTART', '/SUPPRESSMSGBOXES' -Wait
+          $ollama = Join-Path $env:LOCALAPPDATA 'Programs\Ollama\ollama.exe'
+          if (-not (Get-Process ollama -ErrorAction SilentlyContinue)) { Start-Process $ollama -ArgumentList 'serve' -WindowStyle Hidden }
+          for ($i = 0; $i -lt 30; $i++) {
+            try { Invoke-RestMethod 'http://localhost:11434/api/version' | Out-Null; break } catch { Start-Sleep -Seconds 2 }
+          }
+          & $ollama pull $env:OLLAMA_MODEL
+
+      - name: Test (model categories)
+        env:
+          TEST_FILTER: ${{ inputs.local-runtime && 'Category=Julia|Category=Kokoro|Category=Whisper|Category=LocalRuntime' || 'Category=Julia|Category=Kokoro|Category=Whisper' }}
+        run: dotnet test tests/MediaStudio.Tests -c Release --no-build --filter "$env:TEST_FILTER" --logger trx --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results-models
+          path: TestResults/**/*.trx
+          if-no-files-found: ignore

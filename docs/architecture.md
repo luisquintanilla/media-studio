@@ -4,6 +4,9 @@ Media Studio is a .NET 11 solution ([`MediaStudio.slnx`](../MediaStudio.slnx)) w
 command-line tools, and a set of libraries that share one settings file and one AI wiring layer
 (Microsoft.Extensions.AI).
 
+For a guided tour that follows one request through these layers with the actual code at each step, see the
+[walkthrough](walkthrough.md).
+
 ```mermaid
 flowchart TB
     subgraph Apps

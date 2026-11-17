@@ -140,7 +140,7 @@ Everything has a local default. Cloud is off until you allow it (`privacy.allowC
 | [Product tour](docs/media-studio-product.md) | [Routing](docs/routing.md) |
 | [Troubleshooting](docs/troubleshooting.md) | [Speech](docs/speech.md), [Documents](docs/documents.md), [Illustrations](docs/illustrations.md) |
 | [Contributing](CONTRIBUTING.md) | [GitHub Copilot](docs/copilot.md) |
-| [Coding agents and skills](docs/coding-agents.md) | |
+| [Coding agents and skills](docs/coding-agents.md) | [Walkthrough: the .NET AI stack in code](docs/walkthrough.md) |
 
 Deeper production references: [project contracts](docs/contracts.md),
 [file production](docs/file-production.md), [transcription](docs/transcription.md),

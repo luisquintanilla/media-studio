@@ -99,6 +99,42 @@ public sealed partial class AgentGuidanceTests
         Assert.True(missing.Count == 0, "github-app.yml scripts reference missing paths:\n" + string.Join("\n", missing));
     }
 
+    [Fact]
+    public void Walkthrough_snippets_match_their_source()
+    {
+        var lines = File.ReadAllText(Path.Combine(Root, "docs", "walkthrough.md"))
+            .Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var drift = new List<string>();
+        var checkedSnippets = 0;
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var source = WalkthroughSource().Match(lines[i]);
+            if (!source.Success) continue;
+
+            var fence = i + 1;
+            while (fence < lines.Length && lines[fence].Trim().Length == 0) fence++;
+            Assert.True(fence < lines.Length && lines[fence].StartsWith("```", StringComparison.Ordinal),
+                $"walkthrough.md:{i + 1}: a **Source:** line must be followed by a code block");
+
+            var relative = source.Groups["path"].Value;
+            var file = Path.Combine(Root, relative.Replace('/', Path.DirectorySeparatorChar));
+            Assert.True(File.Exists(file), $"walkthrough.md:{i + 1}: missing source {relative}");
+            var actual = File.ReadAllText(file).Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n')
+                .Select(l => l.Trim()).ToHashSet(StringComparer.Ordinal);
+
+            for (i = fence + 1; i < lines.Length && !lines[i].StartsWith("```", StringComparison.Ordinal); i++)
+            {
+                var line = lines[i].Trim();
+                if (line.Length == 0 || line == "// ...") continue;
+                if (!actual.Contains(line)) drift.Add($"walkthrough.md:{i + 1} not found in {relative}: {line}");
+            }
+            checkedSnippets++;
+        }
+
+        Assert.True(checkedSnippets > 0, "walkthrough.md has no **Source:** snippets");
+        Assert.True(drift.Count == 0, "Walkthrough snippets drifted from their source:\n" + string.Join("\n", drift));
+    }
+
     private static Dictionary<string, string> ReadFrontmatter(string text)
     {
         var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
@@ -163,6 +199,9 @@ public sealed partial class AgentGuidanceTests
 
     [GeneratedRegex(@"^\s*command:\s*(.+)$", RegexOptions.Multiline)]
     private static partial Regex AppScriptCommand();
+
+    [GeneratedRegex(@"^\*\*Source:\*\* \[[^\]]+\]\(\.\./(?<path>[^#)]+)#L\d+-L\d+\)$")]
+    private static partial Regex WalkthroughSource();
 
     // Paths after --project, --prefix or -File, plus any *.slnx/*.ps1 argument.
     [GeneratedRegex(@"(?:(?:--project|--prefix|-File)\s+(?<path>[^\s""]+))|(?<path>\b[\w./-]+\.(?:slnx|ps1))\b")]

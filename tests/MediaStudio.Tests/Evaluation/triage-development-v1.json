@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "task": "transcript-triage",
+  "split": "development",
+  "labelsVersion": "synthetic-review-labels-v1",
+  "evidenceBoundary": "Authored synthetic text/scene examples; mechanical fixture, not live model quality, calibrated probabilities or acoustic evidence.",
+  "cases": [
+    { "id": "td-exact", "family": "master-format", "intended": "The master is PCM16.", "observed": "The master is PCM16.", "meaningChange": false },
+    { "id": "td-qualifier", "family": "edit-authority", "intended": "Only saved revisions authorize work.", "observed": "Every edit authorizes work.", "meaningChange": true },
+    { "id": "td-negation", "family": "caption-adoption", "intended": "Triage does not adopt captions.", "observed": "Triage does adopt captions.", "meaningChange": true },
+    { "id": "td-typo", "family": "take-measurement", "intended": "Measure the narration take.", "observed": "Measure the naration take.", "meaningChange": false },
+    { "id": "td-uncertain", "family": "ambiguous-review-surface", "intended": "Review the observed transcript.", "observed": "Review the unclear transcript.", "meaningChange": false },
+    { "id": "td-numeric", "family": "sample-rate-label", "intended": "The sample rate is 24000 hertz.", "observed": "The sample rate is 16000 hertz.", "meaningChange": true }
+  ]
+}

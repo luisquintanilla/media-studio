@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <LangVersion>15</LangVersion>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Only the desktop app bundles the GitHub Copilot CLI runtime (downloaded from its GitHub release and checksum-verified
+         by GitHub.Copilot.SDK). Libraries and tests skip it; CI can pass -p:CopilotSkipCliDownload=true for the app too. -->
+    <IsMediaStudioApp Condition="'$(IsMediaStudioApp)' == '' And '$(MSBuildProjectName)' == 'MediaStudio.App'">true</IsMediaStudioApp>
+    <CopilotSkipCliDownload Condition="'$(CopilotSkipCliDownload)' == '' And '$(IsMediaStudioApp)' != 'true'">true</CopilotSkipCliDownload>
+    <!-- Experimental/evaluation diagnostics from preview AI, document and agent APIs used throughout the sample. -->
+    <NoWarn>$(NoWarn);MEDE0001;EXTEXP0019;CTDE0001;MEAI001;OPENAI001;OPENAI002;MAAI001;AIRoutingChat;VPD001;VPROD001;GHCP001</NoWarn>
+  </PropertyGroup>
+  <!-- Native OpenAI Decisions need OpenAI 2.15, but Microsoft.Extensions.AI.OpenAI 11.0.0 binds to the 2.14 streaming API.
+       Build with -p:OpenAIDecisions=true only after pinning an OpenAI version that has OpenAI.Decisions. -->
+  <PropertyGroup Condition="'$(OpenAIDecisions)' == 'true'">
+    <DefineConstants>$(DefineConstants);OPENAI_DECISIONS</DefineConstants>
+  </PropertyGroup>
+</Project>

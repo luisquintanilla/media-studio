@@ -1,0 +1,93 @@
+# Provisions the Foundry resource (infra/) with azd using GitHub OIDC federated credentials — no secrets in the repo.
+# One-time setup: `azd pipeline config --provider github` creates the service principal, its federated
+# credentials and the repository variables below. Forks without those variables skip this workflow.
+name: Azure (azd provision)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - infra/**
+      - azure.yaml
+      - .github/workflows/azure-dev.yml
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: azure-dev-${{ vars.AZURE_ENV_NAME }}
+  cancel-in-progress: false
+
+env:
+  AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+  AZURE_PRINCIPAL_TYPE: ServicePrincipal
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  not-configured:
+    name: Azure not configured
+    if: vars.AZURE_CLIENT_ID == '' || vars.AZURE_TENANT_ID == '' || vars.AZURE_SUBSCRIPTION_ID == '' || vars.AZURE_ENV_NAME == '' || vars.AZURE_LOCATION == ''
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "::notice::Skipping azd provision. Run 'azd pipeline config --provider github' to set AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_ENV_NAME and AZURE_LOCATION."
+
+  provision:
+    name: azd provision
+    if: vars.AZURE_CLIENT_ID != '' && vars.AZURE_TENANT_ID != '' && vars.AZURE_SUBSCRIPTION_ID != '' && vars.AZURE_ENV_NAME != '' && vars.AZURE_LOCATION != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The postprovision hook runs `configure azd` with the CLI; without .NET it only prints the command.
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+
+      # az is used by the preprovision region check and the postprovision probes.
+      - name: Azure login (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install azd
+        uses: Azure/setup-azd@0b7e3a35ab00f2eee7080c845eb39c3f0ebfa553 # v2.4.0
+
+      - name: azd login (OIDC)
+        run: azd auth login --client-id "$AZURE_CLIENT_ID" --federated-credential-provider github --tenant-id "$AZURE_TENANT_ID"
+
+      # Role assignments target the CI service principal (principalType=ServicePrincipal). Its object id is
+      # read from the token's oid claim unless the optional AZURE_PRINCIPAL_ID variable is set.
+      - name: Prepare azd environment
+        shell: pwsh
+        env:
+          PRINCIPAL_ID_OVERRIDE: ${{ vars.AZURE_PRINCIPAL_ID }}
+          # Optional; created by `azd pipeline config` when the local env has extra values (e.g. DEPLOY_CLAUDE).
+          AZD_INITIAL_ENVIRONMENT_CONFIG: ${{ secrets.AZD_INITIAL_ENVIRONMENT_CONFIG }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          azd env new $env:AZURE_ENV_NAME --subscription $env:AZURE_SUBSCRIPTION_ID --location $env:AZURE_LOCATION --no-prompt
+          $principalId = $env:PRINCIPAL_ID_OVERRIDE
+          if ([string]::IsNullOrWhiteSpace($principalId)) {
+            $token = az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv
+            $payload = $token.Split('.')[1].Replace('-', '+').Replace('_', '/')
+            $payload = $payload.PadRight($payload.Length + (4 - $payload.Length % 4) % 4, '=')
+            $principalId = ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($payload)) | ConvertFrom-Json).oid
+          }
+          if ([string]::IsNullOrWhiteSpace($principalId)) { throw 'Could not determine the service principal object id.' }
+          azd env set AZURE_PRINCIPAL_ID $principalId
+          azd env set AZURE_PRINCIPAL_TYPE ServicePrincipal
+
+      - name: azd provision
+        run: azd provision --no-prompt

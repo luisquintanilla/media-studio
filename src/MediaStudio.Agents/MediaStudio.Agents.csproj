@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>MediaStudio.Agents</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="MediaStudio.Tests" />
+    <ProjectReference Include="..\VideoProduction.Providers\VideoProduction.Providers.csproj" />
+    <PackageReference Include="AGUI.Client" />
+    <PackageReference Include="AGUI.Server" />
+    <PackageReference Include="Microsoft.Agents.AI" />
+    <PackageReference Include="Microsoft.Agents.AI.GitHub.Copilot" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+{
+  "manifest": "SMART_TOOL.md",
+  "cli_argv": ["dotnet", "run", "--project", "src/VideoProduction.Cli", "--"],
+  "deterministic_smoke": ["manifest"]
+}

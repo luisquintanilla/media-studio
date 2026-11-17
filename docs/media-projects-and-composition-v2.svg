@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2180" viewBox="0 0 2400 2180" style="display:block;width:100%;height:auto;max-width:2400px;margin:0 auto" role="img" aria-labelledby="title description">
+  <title id="title">Media Studio target projects, technologies and composition in one repository</title>
+  <desc id="description">Approved target, not a claim that all projects are implemented. The new media-studio-sample repository contains a WPF Blazor Hybrid app, two thin System.CommandLine smart-tool adapters, bounded agent authoring, application-owned review and durable production admission, independent audio production, video production, reusable narration and transcription, opt-in decision adapters, a single Aspire AppHost and the owned Jellyfin companion. Owned applications target .NET 11 and C# 15, while Jellyfin-loaded assemblies retain host-compatible targets. Arrows show logical calls or dependencies, not deployment services. Models propose or infer; deterministic C# validates identities, clocks, output sets, authorization and artifacts. No internal MCP bus, third CLI, automatic model setup or implied audio publication is required.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1L11 6L1 11Z" fill="#b9aaee"/></marker>
+    <style>
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #f5f2fc; }
+      .kicker { font-size: 20px; font-weight: 700; letter-spacing: 2px; fill: #f1bc72; }
+      .title { font-size: 47px; font-weight: 700; }
+      .subtitle { font-size: 25px; fill: #c9c0da; }
+      .heading { font-size: 28px; font-weight: 700; }
+      .project { font-family: Consolas, monospace; font-size: 26px; font-weight: 700; }
+      .body { font-size: 24px; fill: #ddd6ed; }
+      .small { font-size: 22px; fill: #c6bbd7; }
+      .code { font-family: Consolas, monospace; font-size: 22px; fill: #e2d9f6; }
+      .mint { fill: #75ddc7; }
+      .blue { fill: #9dc3ff; }
+      .purple { fill: #d7bbff; }
+      .repo { fill: #252136; stroke: #544866; stroke-width: 1.5; }
+      .host { fill: #303044; stroke: #70647f; stroke-width: 1.5; }
+      .lib { fill: #253148; stroke: #7795c4; stroke-width: 1.5; }
+      .model { fill: #392b49; stroke: #aa7bd1; stroke-width: 1.5; }
+      .control { fill: #203a37; stroke: #4a9d8b; stroke-width: 1.5; }
+      .link { fill: none; stroke: #b9aaee; stroke-width: 2.5; marker-end: url(#arrow); }
+      .bus { fill: none; stroke: #b9aaee; stroke-width: 2.5; }
+      .external { fill: none; stroke: #b9aaee; stroke-width: 2.5; stroke-dasharray: 8 6; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="2400" height="2180" fill="#1e1c30"/>
+  <text x="60" y="47" class="kicker">APPROVED TARGET / ONE SAMPLE REPOSITORY / IMPLEMENTATION NOT YET VERIFIED</text>
+  <text x="60" y="109" class="title">Projects expose capabilities. Hosts compose them.</text>
+  <text x="60" y="155" class="subtitle">Audio and video production are peers; transcription and narration are reusable building blocks.</text>
+  <rect x="40" y="194" width="2320" height="1492" rx="18" class="repo"/>
+  <text x="64" y="239" class="heading mint">media-studio-sample</text>
+  <text x="64" y="275" class="small">Owned application spine: .NET 11 / C# 15. Existing meaningful project names retained; new boundaries are targets, not a mandatory project count.</text>
+
+  <rect x="64" y="310" width="710" height="190" rx="14" class="host"/>
+  <text x="88" y="352" class="project">MediaStudio.App</text>
+  <text x="88" y="390" class="body">WPF + BlazorWebView + Blazor AI</text>
+  <text x="88" y="427" class="small">In-process AG-UI; direct typed library calls.</text>
+  <text x="88" y="464" class="small">Create / Script-Storyboard / Jobs / Projects.</text>
+  <rect x="844" y="310" width="710" height="190" rx="14" class="host"/>
+  <text x="868" y="352" class="project">VideoProduction.Cli</text>
+  <text x="868" y="390" class="body">Production smart tool: audio + video</text>
+  <text x="868" y="427" class="small">System.CommandLine; preserve video contracts.</text>
+  <text x="868" y="464" class="small">Thin adapter over the same capabilities as Hybrid.</text>
+  <rect x="1624" y="310" width="710" height="190" rx="14" class="host"/>
+  <text x="1648" y="352" class="project">audio-transcriber</text>
+  <text x="1648" y="390" class="body">Transcription smart tool</text>
+  <text x="1648" y="427" class="small">System.CommandLine; text / JSON / SRT / VTT.</text>
+  <text x="1648" y="464" class="small">No third narration/audio-production executable.</text>
+  <path d="M419 500V544" class="link"/>
+  <path d="M1199 500V524H1690V544" class="link"/>
+  <path d="M1979 500V522H2350V1108H2338" class="link"/>
+
+  <rect x="64" y="548" width="1090" height="215" rx="14" class="model"/>
+  <text x="88" y="590" class="heading purple">Bounded authoring / agent adapter</text>
+  <text x="88" y="631" class="body">MAF + Copilot SDK + AG-UI + explicitly supplied guidance</text>
+  <text x="88" y="669" class="small">Model proposes typed script/storyboard changes; actual diff is reviewed.</text>
+  <text x="88" y="707" class="small">No ambient filesystem/skills/MCP/plugins; no executable model output.</text>
+  <text x="88" y="745" class="small">Same project/revision identity for direct edits and text/voice iteration.</text>
+  <rect x="1244" y="548" width="1090" height="215" rx="14" class="control"/>
+  <text x="1268" y="590" class="heading mint">Application services / existing durable producer</text>
+  <text x="1268" y="631" class="body">Reviewed revision + output set + stage authorization + admission</text>
+  <text x="1268" y="669" class="small">Persist project/draft/attempt/artifacts; preserve producer lifetime.</text>
+  <text x="1268" y="707" class="small">No new queue/database/worker owner; UI observes actual records.</text>
+  <text x="1268" y="745" class="small">Apply edits is not Generate; candidate is not release/publication.</text>
+  <path d="M1154 653H1240" class="link"/>
+  <path d="M1789 763V789H419V812" class="link"/>
+  <path d="M1199 789V812" class="link"/>
+
+  <rect x="64" y="816" width="710" height="215" rx="14" class="lib"/>
+  <text x="88" y="858" class="heading blue">Independent audio production</text>
+  <text x="88" y="899" class="body">Reviewed script -> measured takes -> master</text>
+  <text x="88" y="937" class="small">PCM16 WAV + transcript + integrity manifest.</text>
+  <text x="88" y="975" class="small">No video Core, visual providers, Node or video encoder.</text>
+  <text x="88" y="1013" class="small">New composition boundary; exact project name is flexible.</text>
+  <rect x="844" y="816" width="710" height="215" rx="14" class="lib"/>
+  <text x="868" y="858" class="project">VideoProduction.Core / .Providers</text>
+  <text x="868" y="899" class="body">Storyboard -> visuals + narration -> video</text>
+  <text x="868" y="937" class="small">Caption/timeline validation, provenance and artifacts.</text>
+  <text x="868" y="975" class="small">Keep frozen video behavior; use trusted render workers.</text>
+  <text x="868" y="1013" class="small">Visual-only dependencies remain on this branch.</text>
+  <rect x="1624" y="816" width="710" height="215" rx="14" class="model"/>
+  <text x="1648" y="858" class="project">Media.Narration</text>
+  <text x="1648" y="899" class="code">ITextToSpeechClient / MLNet.Audio.Kokoro</text>
+  <text x="1648" y="937" class="small">Measured immutable speech takes; actual sample clocks.</text>
+  <text x="1648" y="975" class="small">Shared synthesis, not video-aware project semantics.</text>
+  <text x="1648" y="1013" class="small">Both production branches inject this reusable capability.</text>
+  <path d="M419 1031V1055H1979V1035" class="link"/>
+  <path d="M1554 923H1620" class="link"/>
+  <text x="64" y="1088" class="small">Speech and decision adapters below are called only when needed; no mandatory inference on every operation.</text>
+
+  <rect x="64" y="1112" width="710" height="259" rx="14" class="model"/>
+  <text x="88" y="1154" class="project">VideoProduction.Decisions</text>
+  <text x="88" y="1195" class="body">Experimental neutral contract + SDK adapter</text>
+  <text x="88" y="1233" class="code">OpenAI DecisionsClient / retained local Julia</text>
+  <text x="88" y="1271" class="small">Opt-in routing, video treatment, advisory transcript triage.</text>
+  <text x="88" y="1309" class="small">Refusal is not uncertainty fallback; no authority to approve.</text>
+  <text x="88" y="1347" class="small">Provider compatibility and live cloud access remain gated.</text>
+  <rect x="844" y="1112" width="710" height="259" rx="14" class="model"/>
+  <text x="868" y="1154" class="heading purple">Generative provider / agent adapters</text>
+  <text x="868" y="1195" class="code">IChatClient / IImageGenerator (video only)</text>
+  <text x="868" y="1233" class="small">Task-specific RoutingChatClient selects eligible clients.</text>
+  <text x="868" y="1271" class="small">C# bounds candidates, budget, state and output schema.</text>
+  <text x="868" y="1309" class="small">Decision calls occur inside selection; persist route binding.</text>
+  <text x="868" y="1347" class="small">C# 15 app outcomes: ready / pending / refused / unavailable.</text>
+  <rect x="1624" y="1112" width="710" height="259" rx="14" class="model"/>
+  <text x="1648" y="1154" class="project">AudioTranscriber</text>
+  <text x="1648" y="1195" class="code">ISpeechToTextClient / Whisper.net</text>
+  <text x="1648" y="1233" class="small">Validated audio -> timestamped text/segments + provenance.</text>
+  <text x="1648" y="1271" class="small">Hybrid voice calls library directly; no per-utterance CLI.</text>
+  <text x="1648" y="1309" class="small">Used by audio/video analysis when explicitly required.</text>
+  <text x="1648" y="1347" class="small">Whisper implementation is shared, not reimplemented.</text>
+
+  <text x="64" y="1431" class="kicker">RESOURCE COMPOSITION AND DISCOVERY / A DIFFERENT AXIS FROM AUTHORING</text>
+  <rect x="64" y="1460" width="1090" height="190" rx="14" class="host"/>
+  <text x="88" y="1502" class="project">Demo.AppHost + explicit setup</text>
+  <text x="88" y="1542" class="body">One Aspire entry point: resource wiring, readiness and profiles</text>
+  <text x="88" y="1580" class="small">Provisioning/model downloads are explicit, not side effects of restore.</text>
+  <text x="88" y="1618" class="small">Repo/package skills teach use; they do not grant execution permission.</text>
+  <rect x="1244" y="1460" width="1090" height="190" rx="14" class="lib"/>
+  <text x="1268" y="1502" class="project">Jellyfin.SemanticDiscovery.Plugin / .Core</text>
+  <text x="1268" y="1542" class="body">Host-compatible assemblies; do not inherit net11 automatically</text>
+  <text x="1268" y="1580" class="small">Embeddings / Tokenizers / TensorPrimitives / vector retrieval policy.</text>
+  <text x="1268" y="1618" class="small">Audio item/transcript/index support is not established by video support.</text>
+  <path d="M609 1650V1712H1789V1744" class="external"/>
+  <path d="M1789 1650V1744" class="external"/>
+
+  <rect x="64" y="1748" width="1090" height="176" rx="14" class="host"/>
+  <text x="88" y="1790" class="heading">Actual process boundaries, when required</text>
+  <text x="88" y="1830" class="body">FFmpeg / ffprobe / Node / browser render worker</text>
+  <text x="88" y="1868" class="small">.NET 11 Process APIs preserve trusted argv, bounds and cleanup.</text>
+  <text x="88" y="1906" class="small">Not a compulsory UI-to-CLI or audio-to-video dependency.</text>
+  <rect x="1244" y="1748" width="1090" height="176" rx="14" class="host"/>
+  <text x="1268" y="1790" class="heading">External Jellyfin server / pinned container</text>
+  <text x="1268" y="1830" class="body">Runs its compatible plugin; retains native access/search/playback</text>
+  <text x="1268" y="1868" class="small">Media + metadata + transcript handoff, not shared domain objects.</text>
+  <text x="1268" y="1906" class="small">Publication and same-artifact audio rediscovery are separately gated.</text>
+
+  <path d="M60 1972H2340" stroke="#554868"/>
+  <text x="60" y="2018" class="heading mint">How intelligence mixes with code</text>
+  <text x="60" y="2062" class="body">Model proposes or infers -> C# validates identities, clocks and policy -> human authorizes exact scope -> deterministic production.</text>
+  <text x="60" y="2106" class="small">Two tools, not two copies of the engine. No internal MCP bus; MCP Skills/Tasks deferred. Sandbox feasibility does not enable executable model output.</text>
+  <text x="60" y="2150" class="small">Target boxes describe responsibilities; they are not all separate processes or a mandate to add assemblies. Completed outputs are candidates, never automatic releases.</text>
+</svg>

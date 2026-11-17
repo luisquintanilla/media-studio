@@ -1,0 +1,22 @@
+# gitleaks configuration: the default rules plus allowlists for known false positives.
+# CI: .github/workflows/ci.yml (secrets job). Local: `gitleaks git .` or `gitleaks dir .`.
+title = "media-studio gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "SHA-256 pins of public model files (hex digests, not credentials)"
+regexTarget = "line"
+regexes = [
+  '''(?i)sha256\w*\s*[=:]\s*"[0-9a-f]{64}"''',
+]
+
+[[allowlists]]
+description = "Ignored local build, tool and model folders (never committed)"
+paths = [
+  '''(^|/)artifacts/''',
+  '''(^|/)\.dotnet/''',
+  '''(^|/)(bin|obj)/''',
+  '''(^|/)node_modules/''',
+]

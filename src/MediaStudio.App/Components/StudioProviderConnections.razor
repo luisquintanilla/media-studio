@@ -1,0 +1,206 @@
+@namespace MediaStudio.App.Components
+@using System.IO
+@using VideoProduction.Providers
+<section class="provider-connections" aria-label="Provider connections">
+    <h3>Provider connections</h3>
+    <p class="muted">Choose models for future work. Saving a connection does not use it or change accepted jobs.</p>
+    @foreach (var connection in Workspace.Providers.State.Connections)
+    {
+        <article class="provider-card" data-provider-id="@connection.Id">
+            <header><strong>@DisplayName(connection)</strong><button data-provider-edit="@connection.Id" disabled="@Locked" @onclick="() => Edit(connection)">Configure</button></header>
+            <ul>@foreach (var model in connection.Models) { <li>@model @if (Roles(connection.Id, model) is { Length: > 0 } roles) { <span>· @roles</span> }</li> }</ul>
+            @if (connection.Authentication == "user-secrets") { <p class="muted">API keys are stored as plaintext on this device, not in an encrypted vault.</p> }
+            <details class="provider-advanced"><summary>Connection details</summary>
+                <p>@connection.Endpoint</p><p>@connection.Provider · @connection.Id · @connection.Region · @AuthenticationLabel(connection.Authentication)</p>
+                <ul>@foreach (var model in connection.Models) { <li>@model · @Capabilities(connection, model)</li> }</ul>
+                <p>@connection.NativeDecisionsStatus</p>
+                @if (connection.Authentication == "user-secrets") { <p>Key reference: @connection.SecretName. Configuration does not read the key.</p> }
+            </details>
+        </article>
+    }
+    <article class="provider-card" data-provider-id="local-illustrations">
+        <header><strong>Local illustrations</strong><button id="provider-configure-local" disabled="@Locked" @onclick="EditLocal">Configure</button></header>
+        <p>@(Workspace.Providers.State.LocalImage?.Model ?? "Choose a model running on this device.")</p>
+        <details class="provider-advanced"><summary>Local connection details</summary><p>@Workspace.Providers.State.LocalImage?.Endpoint</p><p>Chat-authored SVG is rasterized locally. Configuration does not download or call a model.</p></details>
+    </article>
+    <button id="provider-add" disabled="@Locked" @onclick="Add">Add provider</button>
+    @if (original is not null)
+    {
+        <form id="provider-form" @onsubmit="Save" @onsubmit:preventDefault>
+            <fieldset disabled="@Locked">
+                <legend>@(localEdit ? "Configure local illustrations" : editingId is null ? "Add Foundry connection" : "Configure connection")</legend>
+                @if (!localEdit)
+                {
+                    <label>Connection ID<input id="provider-id" @bind="id" @bind:event="oninput" maxlength="40" disabled="@(editingId is not null)" /></label>
+                    <label>Display name<input id="provider-name" @bind="name" @bind:event="oninput" maxlength="80" /></label>
+                    <label>Chat provider<select id="provider-kind" @bind="provider"><option value="@ChatProviderKind.OpenAI">OpenAI</option><option value="@ChatProviderKind.Anthropic">Anthropic / Claude</option></select></label>
+                }
+                <label>@(localEdit ? "Existing loopback endpoint" : provider == ChatProviderKind.Anthropic ? "Published HTTPS Foundry Anthropic endpoint" : "Published HTTPS OpenAI v1 endpoint")<input @ref="endpointInput" id="provider-endpoint" @bind="endpoint" @bind:event="oninput" maxlength="2048" placeholder="@(localEdit ? "http://127.0.0.1:PORT/v1" : provider == ChatProviderKind.Anthropic ? "https://YOUR-RESOURCE.services.ai.azure.com/anthropic/" : "https://YOUR-RESOURCE.openai.azure.com/openai/v1")" /></label>
+                @if (localEdit)
+                {
+                    <label>Exact local model<input id="provider-local-model" @bind="localModel" @bind:event="oninput" maxlength="120" /></label>
+                    <label>Owner-private API-key file<input id="provider-local-key-file" @bind="localKeyFile" @bind:event="oninput" maxlength="2048" /></label>
+                    <button type="button" @onclick="ChooseLocalKeyFile">Choose existing key file</button>
+                    <p class="muted">Only the key-file path is saved. Protect plaintext key files on this device.</p>
+                    <details><summary>Local setup details</summary><p>The existing OpenAI-compatible adapter requires a private key file, including servers that ignore authorization. The file is not read on Save.</p></details>
+                }
+                else
+                {
+                    <label>Region<input id="provider-region" @bind="region" @bind:event="oninput" maxlength="80" placeholder="Exact resource region, for example eastus" /></label>
+                    <label>Sign in with<select id="provider-auth" @bind="authentication"><option value="azure-cli">Existing Azure sign-in</option><option value="user-secrets">API key stored on this device</option></select></label>
+                    <p class="muted">Saving does not sign in or check credentials.</p>
+                    @if (authentication == "user-secrets") { <p class="muted">API keys are plaintext local storage, not encrypted. Supply the key separately; do not paste it into these fields.</p> }
+                    <details><summary>Authentication details</summary><p>Entra uses DefaultAzureCredential (az / azd / Visual Studio sign-in). App user-secrets use @ModelProviders.SecretsId, key MediaStudio:Providers:@id:ApiKey. Choose one authentication mode; a failure never switches to a key. Native Decisions/image production requires an OpenAI Entra connection.</p></details>
+                    @if (provider == ChatProviderKind.Anthropic) { <p class="muted">Claude supports chat/writing and chat-authored SVG. It does not supply OpenAI native Decisions, realtime speech or native image generation. Saving does not deploy or call a model.</p> }
+                    <h4>Models</h4>
+                    <p class="muted">Enter deployed model names and what each model supports. No discovery or test call is made.</p>
+                    @for (var i = 0; i < deployments.Count; i++)
+                    {
+                        var index = i;
+                        var deployment = deployments[index];
+                        <div class="provider-deployment" @key="deployment">
+                            <label>Deployment @(index + 1)<input id="@("provider-model-" + index)" @bind="deployment.Name" @bind:event="oninput" maxlength="120" /></label>
+                            <div class="provider-capabilities">
+                                <label><input data-provider-chat="@index" type="checkbox" @bind="deployment.Chat" />Chat and writing</label>
+                                <label><input data-provider-speech="@index" type="checkbox" @bind="deployment.Speech" disabled="@(provider == ChatProviderKind.Anthropic && !deployment.Speech)" />Live speech</label>
+                                <label><input data-provider-image="@index" type="checkbox" @bind="deployment.Image" disabled="@(provider == ChatProviderKind.Anthropic && !deployment.Image)" />Image generation</label>
+                            </div>
+                            <button type="button" data-provider-remove="@index" @onclick="() => deployments.RemoveAt(index)">Remove deployment</button>
+                        </div>
+                    }
+                    <button type="button" id="provider-add-model" disabled="@(deployments.Count >= 80)" @onclick="() => deployments.Add(new())">Add deployment</button>
+                    <details><summary>Advanced model capabilities</summary><p>Chat and writing uses OpenAI Responses or Anthropic Messages through IChatClient. Removing assigned models requires reassigning their roles.</p><label class="provider-capabilities"><input id="provider-native-decisions" type="checkbox" @bind="nativeDecisions" disabled="@(provider == ChatProviderKind.Anthropic && !nativeDecisions)" />Native OpenAI Decisions available on this resource (region must support the Decisions API)</label></details>
+                    <h4>Role assignments</h4>
+                    <label>Writing and storyboards<select id="provider-role-authoring" @bind="authoring"><option value="keep">Keep current assignment</option><option value="">Unassigned / launch authoring</option>@foreach (var model in Declared(d => d.Chat)) { <option value="@("model|" + model)">@model</option> }</select></label>
+                    <label>Quick tasks<select id="provider-role-general" @bind="general"><option value="keep">Keep current assignment</option><option value="">Unassigned</option>@foreach (var model in Declared(d => d.Chat)) { <option value="@("model|" + model)">@model</option> }</select></label>
+                    <label>Speech input<select id="provider-role-speech" @bind="speech"><option value="keep">Keep current assignment</option><option value="">Unassigned (no automatic local switch)</option>@foreach (var model in Declared(d => d.Speech)) { <option value="@("model|" + model)">@model</option> }</select></label>
+                    <label>Image generation model<select id="provider-role-image" @bind="image"><option value="keep">Keep current assignment</option><option value="">Unassigned</option>@foreach (var model in Declared(d => d.Image).Where(m => m == "gpt-image-1-mini")) { <option value="@("model|" + model)">@model</option> }</select></label>
+                    <label>Native Decisions<select id="provider-role-decisions" @bind="decisions"><option value="keep">Keep current assignment</option><option value="">Use launch configuration if supplied</option>@if (nativeDecisions) { @foreach (var model in Declared(_ => true).Where(m => m == "gpt-6-luna")) { <option value="@("model|" + model)">@model</option> } }</select></label>
+                    <p class="muted">Choose the illustration model separately in Settings. Assigning an image model does not select it or generate anything.</p>
+                }
+                <div class="actions"><button id="provider-save" type="submit" class="primary">Save connection</button><button id="provider-cancel" type="button" @onclick="Cancel">Cancel</button></div>
+            </fieldset>
+        </form>
+    }
+    @if (error is not null) { <p id="provider-error" role="alert">@error</p> }
+    @if (status is not null) { <p id="provider-status" role="status">@status</p> }
+</section>
+@code {
+    [Parameter, EditorRequired] public MediaWorkspace Workspace { get; set; } = null!;
+    ModelProviderState? original;
+    string? editingId, error, status;
+    bool localEdit, nativeDecisions, focusForm;
+    ChatProviderKind provider = ChatProviderKind.OpenAI;
+    ElementReference endpointInput;
+    string id = "", name = "", endpoint = "", region = "", authentication = "azure-cli", localModel = "", localKeyFile = "";
+    string authoring = "keep", general = "keep", speech = "keep", image = "keep", decisions = "keep";
+    List<Deployment> deployments = [];
+    bool Locked => Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending;
+    sealed class Deployment { public string Name { get; set; } = ""; public bool Chat { get; set; } public bool Speech { get; set; } public bool Image { get; set; } }
+    static string AuthenticationLabel(string value) => value == "azure-cli" ? "SDK Entra / Azure CLI" : "Explicit app user-secrets API key";
+    static string Capabilities(ModelConnection connection, string model) => string.Join(", ",
+        new[] { connection.ChatModels?.Contains(model) == true ? connection.Provider == ChatProviderKind.Anthropic ? "Anthropic Messages/chat" : "Responses/chat" : null,
+            connection.SpeechModels?.Contains(model) == true ? "realtime transcription" : null,
+            connection.ImageModels?.Contains(model) == true ? "native images" : null,
+            connection.NativeDecisionsAvailable && model == "gpt-6-luna" ? "native Decisions declared" : null }.OfType<string>());
+    string Roles(string connection, string model) => string.Join(", ",
+        new[] { (Workspace.Providers.State.Authoring, "authoring"), (Workspace.Providers.State.General, "general"),
+            (Workspace.Providers.State.Speech, "speech"), (Workspace.Providers.State.ImageFallback, "optional images"),
+            (Workspace.Providers.State.NativeDecision, "Decisions"), (Workspace.Providers.State.ChatIllustration, "SVG illustrations") }
+            .Where(role => role.Item1 == new ModelSelection(connection, model)).Select(role => role.Item2));
+    IEnumerable<string> Declared(Func<Deployment, bool> capability) => deployments.Where(capability)
+        .Select(d => d.Name.Trim()).Where(m => m.Length > 0).Distinct();
+    static string DisplayName(ModelConnection connection) => connection.Id switch
+        { "azure" or "foundry" => "Main cloud connection", "native-decisions" => "Decision connection", _ => connection.Name };
+    void Begin()
+    {
+        if (Locked) { error = "Finish pending work before configuring providers."; return; }
+        original = Workspace.Providers.State; error = null; status = null; focusForm = true;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!focusForm || original is null || Locked) return;
+        focusForm = false;
+        try { await endpointInput.FocusAsync(); }
+        catch (Microsoft.JSInterop.JSException failure) { error = "Connection form focus failed: " + failure.Message; await InvokeAsync(StateHasChanged); }
+    }
+    void Add()
+    {
+        Begin(); if (Locked) return;
+        localEdit = false; editingId = null; id = name = endpoint = region = "";
+        authentication = "azure-cli"; nativeDecisions = false; deployments = [new()];
+        provider = ChatProviderKind.OpenAI;
+        authoring = general = speech = image = decisions = "keep";
+    }
+    void Edit(ModelConnection connection)
+    {
+        Begin(); if (Locked) return;
+        localEdit = false; editingId = id = connection.Id; name = connection.Name; endpoint = connection.Endpoint;
+        region = connection.Region; authentication = connection.Authentication; nativeDecisions = connection.NativeDecisionsAvailable;
+        provider = connection.Provider;
+        deployments = connection.Models.Select(m => new Deployment { Name = m,
+            Chat = connection.ChatModels?.Contains(m) == true, Speech = connection.SpeechModels?.Contains(m) == true,
+            Image = connection.ImageModels?.Contains(m) == true }).ToList();
+        string Selected(ModelSelection? role) => role?.Connection == id ? "model|" + role.Model : "keep";
+        authoring = Selected(original!.Authoring); general = Selected(original.General); speech = Selected(original.Speech);
+        image = Selected(original.ImageFallback); decisions = Selected(original.NativeDecision);
+    }
+    void EditLocal()
+    {
+        Begin(); if (Locked) return;
+        localEdit = true; editingId = null; endpoint = original!.LocalImage?.Endpoint ?? ""; localModel = original.LocalImage?.Model ?? "";
+        localKeyFile = original.LocalImage?.ApiKeyFile ?? "";
+    }
+    void ChooseLocalKeyFile()
+    {
+        if (Locked) return;
+        var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Choose an existing owner-private local API-key file",
+            CheckFileExists = true, Multiselect = false };
+        if (dialog.ShowDialog() == true) localKeyFile = dialog.FileName;
+    }
+    void Cancel() { original = null; error = null; status = "Connection edit cancelled. No form changes were applied."; }
+    async Task Save()
+    {
+        error = null; status = null;
+        try
+        {
+            if (Locked || original is null) throw new InvalidOperationException("Finish pending work and open the connection form before saving.");
+            var candidate = original;
+            if (localEdit)
+            {
+                if (!Uri.TryCreate(endpoint.Trim(), UriKind.Absolute, out var localUri)
+                    || !localUri.IsLoopback || localUri.Scheme is not ("http" or "https")
+                    || localUri.UserInfo.Length != 0 || localUri.Query.Length != 0 || localUri.Fragment.Length != 0
+                    || string.IsNullOrWhiteSpace(localKeyFile) || !Path.IsPathFullyQualified(localKeyFile.Trim()))
+                    throw new InvalidDataException("Choose an HTTP(S) loopback endpoint and an absolute owner-private API-key file path. The key is not read on Save.");
+                candidate = candidate with { LocalImage = original.LocalImage is { } existing
+                    ? existing with { Endpoint = endpoint.Trim(), Model = localModel.Trim(), ApiKeyFile = localKeyFile.Trim() }
+                    : new(endpoint.Trim(), localModel.Trim(), localKeyFile.Trim()) };
+            }
+            else
+            {
+                var connection = new ModelConnection(id.Trim(), name.Trim(), endpoint.Trim(), deployments.Select(d => d.Name.Trim()).ToArray(),
+                    authentication, region.Trim(), nativeDecisions, Declared(d => d.Chat).ToArray(),
+                    Declared(d => d.Speech).ToArray(), Declared(d => d.Image).ToArray(), Provider: provider);
+                if (editingId is null && original.Connections.Any(c => c.Id == connection.Id))
+                    throw new InvalidDataException("That connection ID already exists. Configure its card instead.");
+                ModelSelection? Selected(string value, ModelSelection? previous) => value == "keep" ? previous
+                    : value.Length == 0 ? null : value.StartsWith("model|", StringComparison.Ordinal) ? new(connection.Id, value[6..])
+                    : throw new InvalidDataException("Choose an exact declared deployment for each role.");
+                candidate = candidate with { Connections = [.. original.Connections.Where(c => c.Id != editingId), connection],
+                    Authoring = Selected(authoring, original.Authoring), General = Selected(general, original.General),
+                    Speech = Selected(speech, original.Speech),
+                    SpeechUnassigned = speech == "keep" ? original.SpeechUnassigned : speech.Length == 0,
+                    ImageFallback = Selected(image, original.ImageFallback),
+                    NativeDecision = Selected(decisions, original.NativeDecision) };
+                if (authentication != "azure-cli" && (candidate.NativeDecision?.Connection == connection.Id
+                    || candidate.ImageFallback?.Connection == connection.Id))
+                    throw new InvalidDataException("Current native Decisions/image production requires SDK Entra. Keep those roles on an Entra connection, or explicitly unassign them.");
+            }
+            await Workspace.ConfigureModelsAsync(candidate);
+            original = null;
+            status = "Connection saved. It will be used only when you request work.";
+        }
+        catch (Exception failure) { error = failure.Message; }
+    }
+}

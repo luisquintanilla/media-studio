@@ -1,0 +1,9 @@
+.github/skills/media-explanation/SKILL.md -text whitespace=cr-at-eol
+samples/synthetic-audio/** -text whitespace=cr-at-eol
+tests/VideoProduction.Mcp.Tests/MediaJudgementEvaluation.cs -text whitespace=cr-at-eol
+tests/VideoProduction.Mcp.Tests/Evaluation/*.json -text whitespace=cr-at-eol
+*.patch text eol=lf whitespace=-blank-at-eol
+workers/browser/runtime/*.js -text whitespace=-blank-at-eol,-blank-at-eof
+workers/browser/runtime/HyperFrames-LICENSE.txt -text
+*.sh text eol=lf
+*.ttf binary

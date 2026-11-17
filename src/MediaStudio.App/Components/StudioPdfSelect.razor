@@ -1,0 +1,25 @@
+@namespace MediaStudio.App.Components
+<label>PDF / image reader<select data-pdf-reader data-selected-reader="@Workspace.PdfReaderSelection" value="@Workspace.PdfReaderSelection"
+    disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)" @onchange="Select">
+    <option value="auto">Auto (recommended)</option>
+    <option value="local">Local PdfPig</option>
+    <option value="mistral">Mistral OCR</option>
+    <option value="mistral-images">Mistral OCR + extracted images</option>
+    @foreach (var extractor in Workspace.DocumentExtractorChoices)
+    { <option value="@("doc|" + extractor)">@MediaStudio.Sources.DocumentExtractorFactory.DisplayName(extractor)</option> }
+    @foreach (var connection in Workspace.Providers.State.Connections)
+    {
+        @foreach (var model in (connection.ChatModels ?? []).Where(m => m is "gpt-6.1-sol" or "gpt-6-luna"))
+        { <option value="@("vision|" + connection.Id + "|" + model)">Vision · @model</option> }
+    }
+    @if (Workspace.PdfReaderSelection == "existing")
+    { <option value="existing" disabled>Saved vision reader</option> }
+</select></label>
+@code {
+    [Parameter, EditorRequired] public MediaWorkspace Workspace { get; set; } = null!;
+    void Select(ChangeEventArgs args)
+    {
+        try { Workspace.Error = null; Workspace.SelectPdfReader(args.Value?.ToString() ?? ""); }
+        catch (Exception error) { Workspace.Error = error.Message; }
+    }
+}

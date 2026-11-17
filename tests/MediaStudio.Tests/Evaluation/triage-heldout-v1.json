@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "task": "transcript-triage",
+  "split": "locked-heldout",
+  "labelsVersion": "synthetic-review-labels-v1",
+  "evidenceBoundary": "Authored synthetic text/scene examples; mechanical fixture, not live model quality, calibrated probabilities or acoustic evidence.",
+  "cases": [
+    { "id": "th-exact", "family": "trusted-renderer-choice", "intended": "Choose a renderer-eligible treatment.", "observed": "Choose a renderer-eligible treatment.", "meaningChange": false },
+    { "id": "th-qualifier", "family": "uncertain-quality", "intended": "A proposal may need review.", "observed": "A proposal always needs review.", "meaningChange": true },
+    { "id": "th-negation", "family": "existing-library-provenance", "intended": "This lookup is not a new publication.", "observed": "This lookup is a new publication.", "meaningChange": true },
+    { "id": "th-typo", "family": "archive-reopening", "intended": "Reopen the verified archive.", "observed": "Reopen the verifed archive.", "meaningChange": false },
+    { "id": "th-uncertain", "family": "ambiguous-duration-wording", "intended": "The duration is measured.", "observed": "The duration is unclear.", "meaningChange": true },
+    { "id": "th-numeric", "family": "frame-rate-label", "intended": "Render at 30 frames per second.", "observed": "Render at 24 frames per second.", "meaningChange": true }
+  ]
+}

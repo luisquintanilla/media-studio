@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "task": "visual-choice",
+  "split": "development",
+  "labelsVersion": "synthetic-review-labels-v1",
+  "evidenceBoundary": "Authored synthetic text/scene examples; mechanical fixture, not live model quality, calibrated probabilities or acoustic evidence.",
+  "cases": [
+    { "id": "vd-title", "family": "revision-heading", "kind": "title", "text": "Saved revisions", "mechanism": "Name the reviewed artifact", "acceptedVisuals": ["plain"] },
+    { "id": "vd-flow", "family": "approval-authority", "kind": "diagram", "text": "Draft\nSaved revision\nApproved output", "mechanism": "An ordered flow binds the saved revision", "acceptedVisuals": ["architectureFlowEmphasis"] },
+    { "id": "vd-code", "family": "sample-counter", "kind": "code", "text": "var samples = 48000;\nvar seconds = samples / 24000;", "mechanism": "A code change preserves the sample clock", "acceptedVisuals": ["progressiveCodeFocus"] },
+    { "id": "vd-comparison", "family": "frozen-versus-live", "kind": "diagram", "text": "Before: live synthesis\nAfter: frozen measured take", "mechanism": "A qualified before/after comparison", "acceptedVisuals": ["beforeAfterComparison"] },
+    { "id": "vd-uncertain", "family": "archive-alternatives", "kind": "diagram", "text": "Export source\nVerify archive", "mechanism": "An uncertain flow or plain relationship", "acceptedVisuals": ["plain", "architectureFlowEmphasis"] },
+    { "id": "vd-relationship", "family": "authorization-dependencies", "kind": "diagram", "text": "Reviewed bytes\nExact approval\nOwned producer", "mechanism": "Directed dependency relationships", "acceptedVisuals": ["architectureFlowEmphasis"] }
+  ]
+}

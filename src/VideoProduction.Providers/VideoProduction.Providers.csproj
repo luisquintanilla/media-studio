@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\.github\skills\media-explanation\SKILL.md" LogicalName="MediaExplanation.Guidance" />
+    <ProjectReference Include="..\Media.Audio\Media.Audio.csproj" />
+    <ProjectReference Include="..\MediaStudio.Configuration\MediaStudio.Configuration.csproj" />
+    <ProjectReference Include="..\VideoProduction.Core\VideoProduction.Core.csproj" />
+    <ProjectReference Include="..\VideoProduction.Decisions\VideoProduction.Decisions.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Anthropic" />
+    <Content Include="..\..\docs\licenses\Anthropic.LICENSE*.txt" Link="licenses\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

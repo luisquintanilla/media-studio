@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Video production project v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "width", "height", "fps", "assets", "scenes"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "width": { "const": 1920 },
+    "height": { "const": 1080 },
+    "fps": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": { "numerator": { "const": 30 }, "denominator": { "const": 1 } }
+    },
+    "assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } },
+    "scenes": { "type": "array", "minItems": 1, "maxItems": 100, "items": { "$ref": "#/$defs/scene" } },
+    "deliveryCaptions": { "oneOf": [{ "$ref": "#/$defs/deliveryCaptionBinding" }, { "type": "null" }] },
+    "narrationPolicy": { "$ref": "#/$defs/narrationPolicy" },
+    "chapters": {
+      "type": ["array", "null"], "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "sceneId", "title"],
+        "properties": { "id": { "$ref": "#/$defs/id" }, "sceneId": { "$ref": "#/$defs/id" }, "title": { "type": "string", "minLength": 1, "maxLength": 100 } }
+      }
+    }
+  },
+  "$defs": {
+    "narrationPolicy": {
+      "type": "object", "additionalProperties": false, "required": ["schemaVersion", "mode"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "mode": { "const": "script-phrases-v1" },
+        "analyzeSpeech": { "type": "boolean", "default": false }
+      },
+      "description": "Explicit opt-in authored TTS policy. Canonical script phrases use actual returned PCM boundaries, not word alignment or acoustic proof. Omission retains legacy narration/ASR behavior. Optional QA never adopts/replaces captions."
+    },
+    "visualTreatment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preset", "anchors", "reveals"],
+      "properties": {
+        "preset": { "enum": ["architectureFlowEmphasis", "progressiveCodeFocus", "beforeAfterComparison"] },
+        "anchors": {
+          "type": "array", "minItems": 1, "maxItems": 8,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["id", "startLine", "endLine"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "startLine": { "type": "integer", "minimum": 1, "maximum": 20 },
+              "endLine": { "type": "integer", "minimum": 1, "maximum": 20 }
+            }
+          }
+        },
+        "reveals": {
+          "type": "array", "minItems": 1, "maxItems": 8,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["targetId", "startFrame", "endFrame"],
+            "properties": {
+              "targetId": { "$ref": "#/$defs/id" },
+              "startFrame": { "type": "integer", "minimum": 0, "maximum": 17999 },
+              "endFrame": { "type": "integer", "minimum": 1, "maximum": 18000 }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "preset": { "const": "architectureFlowEmphasis" } } },
+          "then": { "properties": { "anchors": { "minItems": 2, "maxItems": 6 }, "reveals": { "minItems": 2, "maxItems": 6 } } }
+        },
+        {
+          "if": { "properties": { "preset": { "const": "beforeAfterComparison" } } },
+          "then": { "properties": { "anchors": { "minItems": 2, "maxItems": 2 }, "reveals": { "minItems": 2, "maxItems": 2 } } }
+        }
+      ],
+      "description": "Trusted template data only. Runtime enforces compatible scene kind; unique ordered nonoverlapping 1-based inclusive line anchors; flow 2..6 single-line nodes covering text <=48 columns; code focus <=14 lines <=88 columns; comparison two contiguous covering panels <=10 lines each <=42 columns. No control/surrogate characters. One reveal per anchor, same order, first starts at zero, no overlap, start<end<=resolved scene frames. Revealed flow/panels persist; code context stays dimly visible. Emphasis ends at endFrame. No executable expressions/layout/URLs."
+    },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "asset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "path", "sha256", "provenance", "license"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "path": { "type": "string", "minLength": 1, "description": "Portable relative slash-separated path; validator also rejects traversal, devices and reparse points." },
+        "sha256": { "$ref": "#/$defs/hash" },
+        "provenance": { "type": "string", "minLength": 1 },
+        "license": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cue": {
+      "type": "object", "additionalProperties": false,
+      "required": ["startSample", "endSample", "text", "evidence"],
+      "properties": {
+        "startSample": { "type": "integer", "minimum": 0 },
+        "endSample": { "type": "integer", "minimum": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "evidence": { "enum": ["takeWindow", "asrSegment", "humanVerified"] },
+        "policyException": { "type": ["string", "null"] }
+      }
+    },
+    "narration": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assetId", "sampleRate", "sampleCount", "displayText", "cues"],
+      "properties": {
+        "assetId": { "$ref": "#/$defs/id" },
+        "sampleRate": { "type": "integer", "minimum": 8000, "maximum": 192000 },
+        "sampleCount": { "type": "integer", "minimum": 1 },
+        "displayText": { "type": "string" },
+        "cues": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/cue" } },
+        "transcriptAssetId": { "type": ["string", "null"] },
+        "transcriptPending": { "type": "boolean", "default": false },
+        "transcriptAdoptionAssetId": { "type": ["string", "null"] },
+        "scriptCaptionAssetId": { "$ref": "#/$defs/id", "description": "Hashed schemaVersion1 script-caption receipt: exact source spans, provider identities/receipts, phrase PCM hashes/sample offsets, composition/master/end guard and actual TakeWindow cues." },
+        "speechAnalysisAssetId": { "$ref": "#/$defs/id", "description": "Optional hashed non-adopting QA receipt. Absence means not run, never passed. Explicit outcomes: findings, observed-agreement (not acoustic verification), failed." }
+      }
+    },
+    "deliveryCaptionBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceCompositionSha256", "timelineCompositionSha256", "narration", "intendedScript", "visualDescription", "sourceMovieSha256", "decodedPcmSha256", "decoderFfmpegSha256", "deliverySamples", "clockEvidence"],
+      "properties": {
+        "sourceCompositionSha256": { "$ref": "#/$defs/hash" }, "timelineCompositionSha256": { "$ref": "#/$defs/hash" },
+        "narration": { "$ref": "#/$defs/narration" }, "intendedScript": { "type": "string" }, "visualDescription": { "type": "string" },
+        "sourceMovieSha256": { "$ref": "#/$defs/hash" }, "decodedPcmSha256": { "$ref": "#/$defs/hash" },
+        "decoderFfmpegSha256": { "$ref": "#/$defs/hash" }, "deliverySamples": { "type": "integer", "minimum": 1 },
+        "clockEvidence": { "type": "string", "minLength": 1 }
+      },
+      "description": "Explicit optional adopted whole selected delivery transcript; ordered source/timeline hash and actual re-decoded AAC PCM must agree. Not pre-encode/lossy waveform identity."
+    },
+    "effect": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "startFrame", "endFrame"],
+      "properties": {
+        "kind": { "enum": ["highlight", "arrow", "fade"] },
+        "startFrame": { "type": "integer", "minimum": 0 },
+        "endFrame": { "type": "integer", "minimum": 1 },
+        "text": { "type": "string", "maxLength": 100 }
+      }
+    },
+    "region": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 0.8 },
+        "width": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "height": { "type": "number", "exclusiveMinimum": 0, "maximum": 0.8 }
+      },
+      "description": "Runtime also enforces x+width<=1 and y+height<=0.8, finite values, observed anchor match and transformed caption-safe bounds."
+    },
+    "rate": {
+      "type": "object", "additionalProperties": false, "required": ["numerator", "denominator"],
+      "properties": { "numerator": { "type": "integer", "minimum": 1 }, "denominator": { "type": "integer", "minimum": 1 } }
+    },
+    "spatialEffect": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "startFrame", "endFrame", "anchorId", "expectedRegion"],
+      "properties": {
+        "kind": { "enum": ["highlight", "dim", "callout", "zoom", "pointer", "click"] },
+        "startFrame": { "type": "integer", "minimum": 0 }, "endFrame": { "type": "integer", "minimum": 1 },
+        "anchorId": { "$ref": "#/$defs/id" }, "expectedRegion": { "$ref": "#/$defs/region" },
+        "text": { "type": "string", "maxLength": 80 }
+      }
+    },
+    "footageEdit": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "sourceFps", "startFrame", "endFrame", "reason", "anchorAssetId", "effects"],
+      "properties": {
+        "sourceSha256": { "$ref": "#/$defs/hash" }, "sourceFps": { "$ref": "#/$defs/rate" },
+        "startFrame": { "type": "integer", "minimum": 0 }, "endFrame": { "type": "integer", "minimum": 1 },
+        "reason": { "type": "string", "minLength": 1 }, "anchorAssetId": { "type": ["string", "null"] },
+        "effects": { "type": "array", "maxItems": 32, "items": { "$ref": "#/$defs/spatialEffect" } },
+        "reducedMotion": { "type": "boolean", "default": true },
+        "tailHold": { "oneOf": [{ "$ref": "#/$defs/tailHold" }, { "type": "null" }] }
+      },
+      "tailHold": {
+        "type": "object", "additionalProperties": false, "required": ["frames", "reason"],
+        "properties": {
+          "frames": { "type": "integer", "minimum": 1, "maximum": 300 },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "description": "Explicit repeated final selected frame, output30fps. Not additional native elapsed time. Action timing or exact full selection+hold fixed duration required."
+      },
+      "sceneTransition": {
+        "type": "object", "additionalProperties": false,
+        "required": ["frames", "outgoingStaticFrames", "incomingStaticFrames", "audioRampSamples", "reason"],
+        "properties": {
+          "frames": { "type": "integer", "minimum": 1, "maximum": 30 },
+          "outgoingStaticFrames": { "type": "integer", "minimum": 2, "maximum": 30 },
+          "incomingStaticFrames": { "type": "integer", "minimum": 2, "maximum": 30 },
+          "audioRampSamples": { "type": "integer", "minimum": 1, "maximum": 2400 },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "description": "Incoming insert-only frozen-frame dissolve; no scene overlap/removal. Rendered handles must be pixel-identical and boundary ramp samples exact-zero48kPCM. Subsequent scene/caption/chapter starts shift by bridge frames."
+      },
+      "description": "Explicit half-open original source frame selection; immutable raw original, real PTS map, no implicit waiting-time removal/loop/stretch."
+    },
+    "jellyfinResult": {
+      "type": "object", "additionalProperties": false, "required": ["id", "name", "type"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-fA-F0-9]{32}$" }, "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "type": { "enum": ["Episode", "Audio", "Movie", "Series", "Book"] }
+      }
+    },
+    "jellyfinProfile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "origin", "serverId", "serverVersion", "webVersion", "pluginIdentity", "corpusSha256", "userId", "libraryIds", "query", "expectedResult", "searchEndpoint", "allowedApiPaths", "allowedWebsocketPaths", "webAssets"],
+      "properties": {
+        "schemaVersion": { "const": 1 }, "origin": { "type": "string", "pattern": "^http://127\\.0\\.0\\.1:[0-9]+$" },
+        "serverId": { "type": "string", "minLength": 1 }, "serverVersion": { "type": "string", "minLength": 1 },
+        "webVersion": { "type": "string", "minLength": 1 }, "pluginIdentity": { "type": "string", "minLength": 1 },
+        "corpusSha256": { "$ref": "#/$defs/hash" }, "userId": { "type": "string", "pattern": "^[a-fA-F0-9]{32}$" },
+        "libraryIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-fA-F0-9]{32}$" } },
+        "query": { "type": "string", "minLength": 2, "maxLength": 40 }, "expectedResult": { "$ref": "#/$defs/jellyfinResult" },
+        "searchEndpoint": { "type": "string" }, "allowedApiPaths": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "type": "string" } },
+        "webAssets": { "type": "array", "minItems": 1, "maxItems": 5000, "items": {
+          "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+          "properties": { "path": { "type": "string", "pattern": "^web/[a-zA-Z0-9_@./-]+$" }, "sha256": { "$ref": "#/$defs/hash" } }
+        } },
+        "allowedWebsocketPaths": { "type": "array", "items": { "const": "/socket" } },
+        "resultHoldMilliseconds": { "type": "integer", "minimum": 1000, "maximum": 10000, "default": 2000 }
+      },
+      "description": "Reviewed native app scope; user authenticates in a private unrecorded context. Never include secrets in project/profile."
+    },
+    "scene": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "title", "text", "script", "timing", "fixedFrames", "allowHold", "visualAssetId", "narration", "effects"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["title", "browser", "terminal", "code", "diagram", "media"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "text": { "type": "string", "maxLength": 10000 },
+        "script": { "type": "string", "minLength": 1, "maxLength": 10000 },
+        "timing": { "enum": ["narration", "action", "fixed"] },
+        "fixedFrames": { "type": "integer", "minimum": 0, "maximum": 18000 },
+        "allowHold": { "type": "boolean" },
+        "visualAssetId": { "type": ["string", "null"] },
+        "narration": { "oneOf": [{ "$ref": "#/$defs/narration" }, { "type": "null", "description": "Draft only; production validation requires complete narration." }] },
+        "effects": { "type": "array", "items": { "$ref": "#/$defs/effect" } },
+        "capture": { "oneOf": [{ "$ref": "#/$defs/jellyfinProfile" }, { "type": "null" }] },
+        "edit": { "oneOf": [{ "$ref": "#/$defs/footageEdit" }, { "type": "null" }] },
+        "audioSelection": {
+          "type": ["object", "null"], "additionalProperties": false, "required": ["startSample", "endSample", "reason"],
+          "properties": { "startSample": { "type": "integer", "minimum": 0 }, "endSample": { "type": "integer", "minimum": 1 }, "reason": { "type": "string", "minLength": 1 } }
+        },
+        "visualDescription": { "type": ["string", "null"], "maxLength": 10000 },
+        "transitionIn": { "oneOf": [{ "$ref": "#/$defs/sceneTransition" }, { "type": "null" }] },
+        "visual": { "oneOf": [{ "$ref": "#/$defs/visualTreatment" }, { "type": "null" }] },
+        "motion": { "oneOf": [{ "$ref": "motion.schema.json" }, { "type": "null" }] }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["motion"], "properties": { "motion": { "type": "object" } } },
+          "then": { "properties": { "kind": { "const": "diagram" }, "visual": { "type": "null" }, "visualAssetId": { "type": "null" }, "effects": { "maxItems": 0 } } }
+        }
+      ]
+    }
+  }
+}

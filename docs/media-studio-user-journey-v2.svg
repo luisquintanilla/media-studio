@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1160" viewBox="0 0 1600 1160" style="display:block;width:100%;height:auto;max-width:1600px;margin:0 auto" role="img" aria-labelledby="title description">
+  <title id="title">Media Studio target: four views for first-class audio and video</title>
+  <desc id="description">Approved user journey target, not proof of implemented screens. A persistent WPF and Blazor Hybrid shell offers Create, Jobs and Projects plus the selected project and active-job indication. Create accepts a typed or spoken brief and Audio, Video or Both output intent. Contextual authoring reviews a self-contained audio script or video storyboard with typed agent proposals and direct edits. Applying a proposal does not authorize generation. Approve and Generate durably admits the exact saved revision and requested output set before opening Jobs. Jobs observe the existing producer and real per-output outcomes without fake progress. Projects and Artifacts reopen drafts and verified audio/video results without replaying effects; historical submitted inputs are inspected read-only or edited as a new revision.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1L11 6L1 11Z" fill="#b9aaee"/></marker>
+    <style>
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #f5f2fc; }
+      .kicker { font-size: 17px; font-weight: 700; letter-spacing: 1.5px; fill: #f1bc72; }
+      .title { font-size: 39px; font-weight: 700; }
+      .subtitle { font-size: 22px; fill: #c9c0da; }
+      .heading { font-size: 27px; font-weight: 700; }
+      .body { font-size: 22px; fill: #ddd6ed; }
+      .small { font-size: 19px; fill: #c6bbd7; }
+      .code { font-family: Consolas, monospace; font-size: 19px; fill: #d7c6f7; }
+      .mint { fill: #75ddc7; }
+      .blue { fill: #9dc3ff; }
+      .amber { fill: #f1bc72; }
+      .panel { fill: #2c2542; stroke: #615270; stroke-width: 1.5; }
+      .lib { fill: #253148; stroke: #7795c4; stroke-width: 1.5; }
+      .control { fill: #203a37; stroke: #4a9d8b; stroke-width: 1.5; }
+      .link { fill: none; stroke: #b9aaee; stroke-width: 2.5; marker-end: url(#arrow); }
+      .reopen { fill: none; stroke: #b9aaee; stroke-width: 2.5; stroke-dasharray: 8 6; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1600" height="1160" fill="#1e1c30"/>
+  <text x="60" y="44" class="kicker">APPROVED UX TARGET / IMPLEMENTATION AND NATIVE VERIFICATION IN PROGRESS</text>
+  <text x="60" y="101" class="title">Four views. One durable project. The chosen medium.</text>
+  <text x="60" y="143" class="subtitle">Audio and video share authoring context, not a compulsory visual pipeline or identical script.</text>
+  <rect x="60" y="183" width="1480" height="61" rx="12" class="control"/>
+  <text x="84" y="222" class="body mint">Persistent shell: Create  |  Jobs  |  Projects  |  Selected project  |  Active-job indication</text>
+
+  <rect x="60" y="282" width="350" height="328" rx="16" class="panel"/>
+  <text x="84" y="325" class="heading">1. Create</text>
+  <text x="84" y="368" class="body">Type or record the brief</text>
+  <text x="84" y="407" class="small">Stop -> transcribe -> edit -> send</text>
+  <text x="84" y="446" class="body blue">Audio  |  Video  |  Both</text>
+  <text x="84" y="485" class="small">Persist identity and submitted brief.</text>
+  <text x="84" y="524" class="small">Create plan opens authoring.</text>
+  <text x="84" y="563" class="small">No auto-send or hidden setup.</text>
+  <path d="M410 448H466" class="link"/>
+
+  <rect x="470" y="282" width="650" height="452" rx="16" class="lib"/>
+  <text x="494" y="325" class="heading blue">2. Script / Storyboard</text>
+  <text x="494" y="363" class="small">Contextual authoring, not another app or an empty global page.</text>
+  <rect x="494" y="389" width="286" height="123" rx="10" class="panel"/>
+  <text x="514" y="423" class="body">Audio plan</text>
+  <text x="514" y="458" class="small">Self-contained spoken script</text>
+  <text x="514" y="492" class="small">Sequence / supported pacing</text>
+  <rect x="810" y="389" width="286" height="123" rx="10" class="panel"/>
+  <text x="830" y="423" class="body">Video storyboard</text>
+  <text x="830" y="458" class="small">Scenes / visuals / narration</text>
+  <text x="830" y="492" class="small">Eligible visual treatments</text>
+  <text x="494" y="555" class="body">Direct edits + text/voice agent proposals + actual diff</text>
+  <text x="494" y="596" class="code">Apply changes -> saved working revision</text>
+  <text x="494" y="637" class="body amber">Approve &amp; Generate: exact revision + output set</text>
+  <text x="494" y="675" class="small">Bind voice/providers and bounds; admit once before navigation.</text>
+  <text x="494" y="713" class="small">Surface unsaved edits, pending proposals and stale conflicts.</text>
+  <path d="M1120 635H1196" class="link"/>
+
+  <rect x="1200" y="282" width="340" height="452" rx="16" class="control"/>
+  <text x="1224" y="325" class="heading mint">3. Jobs</text>
+  <text x="1224" y="370" class="body">Observe accepted attempts</text>
+  <text x="1224" y="411" class="small">Real stage / provider / diagnostics</text>
+  <text x="1224" y="452" class="small">Actual per-output status</text>
+  <text x="1224" y="493" class="small">No invented progress or ETA</text>
+  <text x="1224" y="534" class="small">Cancel requested != stopped</text>
+  <text x="1224" y="575" class="small">Existing producer owns execution</text>
+  <text x="1224" y="616" class="small">Leave view; job is not cancelled</text>
+  <text x="1224" y="657" class="small">Restart reattaches to real records</text>
+  <text x="1224" y="698" class="small">Retry is explicit, never fake resume</text>
+  <path d="M1370 734V902" class="link"/>
+  <text x="1220" y="807" class="small">Outputs</text>
+  <text x="1220" y="843" class="small">same attempt</text>
+
+  <rect x="470" y="783" width="650" height="77" rx="12" class="panel"/>
+  <text x="494" y="815" class="body">Both: record each requested output.</text>
+  <text x="494" y="846" class="small">One failure is not overall success; keep committed artifacts.</text>
+
+  <rect x="60" y="906" width="1480" height="177" rx="16" class="lib"/>
+  <text x="84" y="949" class="heading blue">4. Projects / Artifacts</text>
+  <text x="84" y="990" class="body">Drafts and running, failed or completed projects; verified direct audio/video playback.</text>
+  <text x="84" y="1028" class="small">Exact project / revision / attempt / manifest links. Missing, corrupt or intermediate files are not successful output.</text>
+  <text x="84" y="1065" class="small">Reopen working drafts; inspect submitted snapshots read-only; Edit as new revision without replaying model or generation effects.</text>
+  <path d="M220 906V885H445V637H466" class="reopen"/>
+  <text x="494" y="889" class="small">Reopen or inspect; do not replay production</text>
+  <text x="60" y="1129" class="small">Candidate != release. Model downloads, cloud calls, provisioning and publication retain their separate authorization boundaries.</text>
+</svg>

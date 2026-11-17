@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "wavPath": "narration.wav",
+  "wavSha256": "67b547c67cf1a3dcc79d78cfe0be6b8876e75afe8b9044a7a16cecf05a6b8870",
+  "sampleRate": 16000,
+  "sampleCount": 8000,
+  "channels": 1,
+  "encoding": "pcm_s16le",
+  "displayText": "This tests independent audio composition and exact sample clocks only.",
+  "modelId": "synthetic-sine-fixture-v1",
+  "execution": {
+    "path": "meai-in-process-v1",
+    "abstraction": "Microsoft.Extensions.AI.ITextToSpeechClient",
+    "package": "Microsoft.Extensions.AI.Abstractions",
+    "packageVersion": "10.11.0",
+    "apiStatus": "experimental MEAI001",
+    "abstractionAssembly": {
+      "version": "10.11.0.0",
+      "sha256": "a3216886dec2b2528b2d7212c438d21c3d6de2061b500bd2ea505a41f896f8d3"
+    },
+    "client": {
+      "provider": "synthetic-fixture-not-tts",
+      "clientType": "AudioTranscriber.Tests.AudioProductionTests\u002BSyntheticToneClient",
+      "artifacts": []
+    },
+    "request": {
+      "voice": "synthetic-tone",
+      "language": "en",
+      "speed": 1
+    },
+    "cacheIdentity": "99fb092ae493eea89f5f407135117ca027daea339d1eb757c36a7b1b76f9bab6"
+  },
+  "providerEvidence": null,
+  "timingEvidence": "whole-returned-take-sample-range-only"
+}

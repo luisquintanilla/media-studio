@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded animated mechanism",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entities", "stages"],
+  "properties": {
+    "entities": {
+      "type": "array", "minItems": 1, "maxItems": 20,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "shape", "tone", "label", "width", "height", "keys"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+          "shape": { "enum": ["circle", "box", "cloud", "drop", "sun", "arrow"] },
+          "tone": { "enum": ["water", "warm", "air", "neutral"] },
+          "label": { "type": "string", "maxLength": 28 },
+          "width": { "type": "integer", "minimum": 12, "maximum": 240 },
+          "height": { "type": "integer", "minimum": 12, "maximum": 140 },
+          "keys": {
+            "type": "array", "minItems": 2, "maxItems": 8,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["percent", "x", "y", "opacity"],
+              "properties": {
+                "percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "x": { "type": "integer", "minimum": 0, "maximum": 1000 },
+                "y": { "type": "integer", "minimum": 0, "maximum": 600 },
+                "opacity": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "stages": {
+      "type": "array", "minItems": 1, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["percent", "caption"],
+        "properties": {
+          "percent": { "type": "integer", "minimum": 0, "maximum": 95 },
+          "caption": { "type": "string", "minLength": 1, "maxLength": 100 }
+        }
+      }
+    }
+  },
+  "description": "Diagram only; mutually exclusive with illustrations/imported media/visual presets. MotionVisuals.Validate additionally enforces unique IDs, ordered key/stage percentages, explicit 0/100 entity poses, size/label-safe canvas margins, finite values and a minimum two-second measured scene. Linear interpolation; no code, expressions, assets or fabricated clocks."
+}

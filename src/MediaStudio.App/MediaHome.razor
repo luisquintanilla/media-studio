@@ -1,0 +1,684 @@
+@namespace MediaStudio.App
+@using VideoProduction
+@using VideoProduction.Providers
+@using MediaStudio.Audio
+@using MediaStudio.Sources
+@using MediaStudio.App.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+@inject MediaWorkspace Workspace
+@inject SetupState Setup
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="studio-root" data-theme="@theme">
+<div class="studio-shell" data-theme="@theme">
+    <aside class="navigation-rail">
+        <div class="brand"><span class="brand-mark">M</span><strong>Media Studio</strong></div>
+        <button class="project-switcher" disabled="@Workspace.Voice.InputPending" @onclick="() => switcher = true"><span>@Workspace.Working.Title</span><span aria-hidden="true">⌄</span></button>
+        <button id="media-new-project" class="nav-item" title="New blank project" aria-label="New blank project"
+            disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)" @onclick="NewProject"><StudioIcon Name="create" /><span>New project</span></button>
+        <nav aria-label="Main navigation">
+            @foreach (var destination in destinations)
+            {
+                <button id="@destination.Id" class="nav-item @(Workspace.View == destination.View ? "active" : "")"
+                    aria-label="@destination.Title" title="@destination.Title" aria-current="@(Workspace.View == destination.View ? "page" : null)" @onclick="() => Navigate(destination.View)">
+                    <StudioIcon Name="@destination.Icon" /><span>@destination.Title</span>
+                </button>
+            }
+        </nav>
+        <div class="rail-bottom"><span class="local-label">LOCAL WORKSPACE</span>
+            <button class="nav-item" aria-label="Settings" title="Settings" @onclick="() => settings = true"><StudioIcon Name="settings" /><span>Settings</span></button>
+        </div>
+    </aside>
+    <main class="studio-main">
+        @if (Workspace.Voice.InputPending && Workspace.View != MediaView.Create && (Workspace.View != MediaView.Review || !chatOpen))
+        {
+            <StudioVoiceInput Voice="Workspace.Voice" Busy="true" />
+        }
+        @if (Workspace.Error is { } error)
+        {
+            <div class="error-banner" id="media-error" role="alert"><strong>Needs attention</strong><p>@error</p>
+                @if (Workspace.AuthoringDiagnostic is { } diagnostic)
+                { <details><summary>Technical details</summary><pre>@Json.Text(diagnostic)</pre></details> }
+                <button @onclick="() => Workspace.Error = null">Dismiss</button></div>
+        }
+        @if (Workspace.View == MediaView.Create)
+        {
+            <section id="media-create" class="create-page">
+                <div class="composer-heading"><h1>@(HasDraftItems ? "Refine this project's brief" : "What would you like to create?")</h1></div>
+                @if (HasDraftItems)
+                {
+                    <div data-existing-project-notice class="capability-notice">
+                        <span>You are editing “@Workspace.Working.Title”. Sending updates this project's existing storyboard and audio script.</span>
+                        <button id="media-create-new-blank" @onclick="NewProject"
+                            disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)">Start a new blank project</button>
+                    </div>
+                }
+                <div class="intent-composer" data-source-drop="source-input" @ondragover:preventDefault>
+                    <label class="sr-only" for="media-brief">Describe your explanation</label>
+                    <textarea id="media-brief" class="intent-input" placeholder="Explain a concept, tell a story, or turn a document into something people can understand…"
+                        maxlength="6000" value="@Workspace.Working.Prompt" disabled="@(Workspace.Busy || Workspace.SourcesBusy)"
+                        @oninput='e => EditBrief(c => c with { Prompt = Text(e) }, "brief:prompt")' @onkeydown="ComposerKey"></textarea>
+                    <div class="source-slot">
+                        <div class="source-chips">
+                            @foreach (var source in Workspace.SourceList)
+                            {
+                                <button class="source-chip" @onclick="() => sourcesOpen = true"><StudioIcon Name="storyboard" />@source.Name
+                                    <span>@(source.Projection.Chunks.Length == 0 ? "Needs OCR" : "Ready")</span></button>
+                            }
+                        </div>
+                        @if (PendingLinks.Length > 0)
+                        { <button id="read-source-links" disabled="@(Workspace.SourcesBusy || Workspace.Busy)" @onclick="ReadLinks">Read sources (@PendingLinks.Length links)</button> }
+                        @if (Workspace.SourceStatus.Length > 0) { <p id="source-status" role="status">@Workspace.SourceStatus</p> }
+                    </div>
+                    <div class="composer-toolbar">
+                        <label class="source-picker"><StudioIcon Name="create" />Add sources<InputFile id="source-input" OnChange="AttachFiles"
+                            accept=".pdf,.png,.txt,.md,.markdown" multiple disabled="@(Workspace.SourcesBusy || Workspace.Busy)" /></label>
+                        <button class="subtle" @onclick="() => sourcesOpen = true">Review sources</button>
+                        <div class="toolbar-spacer"></div>
+                        @if (creating && Workspace.Busy)
+                        { <span data-create-progress role="status">Writing…</span> }
+                        <StudioVoiceInput @key="Workspace.Draft.DraftId" Voice="Workspace.Voice" Busy="@(Workspace.Busy || Workspace.SourcesBusy)"
+                            InsertionTarget="@("brief:" + Workspace.Draft.DraftId)"
+                            ComposerText="@Workspace.Working.Prompt"
+                            InsertionReady="() => !Workspace.Busy && !Workspace.SourcesBusy" SetupRequested="OpenVoiceSettings"
+                            InsertRequested="InsertBriefVoice" />
+                        <button id="media-create-save" class="primary send-button" disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending || string.IsNullOrWhiteSpace(Workspace.Working.Prompt))"
+                            aria-label="@((HasDraftItems ? "Update " : "Create ") + Workspace.Working.Outputs + " draft, not production")" @onclick="Create"><StudioIcon Name="send" /></button>
+                    </div>
+                </div>
+                <div class="creative-options">
+                    <StudioModelSelect Workspace="Workspace" />
+                    <label>Output<select id="media-output" value="@Workspace.Working.Outputs"
+                        data-selected-output="@Workspace.Working.Outputs" disabled="@Workspace.Busy"
+                        @onchange="e => Act(() => Workspace.ChangeOutput(Enum.Parse<MediaOutput>(Text(e))))">
+                        <option>Video</option><option>Audio</option><option>Both</option></select></label>
+                    <label>Target duration<select value="@Workspace.Draft.Frame.Direction.TargetSeconds" @onchange="TargetChange">
+                        <option value="30">30 seconds</option><option value="60">1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option>
+                    </select></label>
+                    <label>Audience<select value="@Workspace.Draft.Frame.Direction.Audience" @onchange="AudienceChange">
+                        <option>Auto</option><option>New to the topic</option><option>Practitioners</option></select></label>
+                    <label>Depth<select value="@Workspace.Draft.Frame.Direction.Depth" @onchange="DepthChange">
+                        <option>Auto</option><option>Quick overview</option><option>Step by step</option></select></label>
+                </div>
+                @if (!Workspace.Busy && Workspace.AgentText.Length > 0 && !HasDraftItems)
+                {
+                    <div data-create-author-response class="author-clarification" role="status">
+                        <strong>Author clarification</strong>
+                        <StudioMarkdown Text="@Workspace.AgentText" />
+                        <p class="muted">Update your brief or options above, then send again.</p>
+                    </div>
+                }
+                @if (!Workspace.AuthorConfigured)
+                {
+                    <div class="capability-notice"><span>Agent not connected. You can start manually.</span>
+                        <button class="text-button" @onclick="() => settings = true">Configure</button></div>
+                }
+                <div class="recent-projects"><h2>Recent projects</h2>
+                    @foreach (var project in Workspace.Projects.List().Take(3))
+                    {
+                        <button class="recent-project" @onclick="() => OpenProject(project)">
+                            <StudioIcon Name="storyboard" /><strong>@project.Content.Title</strong><span>@project.Content.Outputs</span>
+                        </button>
+                    }
+                    @if (Workspace.Projects.List().Length == 0) { <p class="muted">Your explanations will appear here.</p> }
+                </div>
+            </section>
+        }
+        else if (Workspace.View == MediaView.Review)
+        {
+            <section id="media-review" class="storyboard-page" data-run-status="@Workspace.Draft.RunStatus">
+                <header class="page-header"><div><span class="eyebrow">PROJECT CANVAS</span>
+                    <textarea id="media-title" class="title-input" rows="2" aria-label="Project title" value="@Workspace.Working.Title" maxlength="100"
+                        disabled="@Workspace.Busy" @oninput='e => EditBrief(c => c with { Title = Text(e) }, "brief:title")'></textarea>
+                    <p class="muted">@SavedLabel · @Workspace.Working.Outputs · @Workspace.Draft.Frame.Direction.TargetSeconds second creative target</p>
+                </div><div class="header-actions">
+                    <button id="media-undo" disabled="@Workspace.Busy" @onclick="() => Act(() => Workspace.Undo())">Undo</button>
+                    <button disabled="@Workspace.Busy" @onclick="() => Act(() => Workspace.Undo(true))">Redo</button>
+                    <button id="media-save" disabled="@Workspace.Busy" @onclick="() => Act(Workspace.Save)">Save</button>
+                    <button @onclick="() => sourcesOpen = true">Sources (@Workspace.Draft.Frame.Sources.Length)</button>
+                    <button id="media-generate" class="primary" disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)" @onclick="Submit">Generate…</button>
+                </div></header>
+                <div class="canvas-tabs" role="group" aria-label="Canvas medium">
+                    @if (Workspace.Working.Outputs != MediaOutput.Audio) { <button class="@(!AudioCanvas ? "active" : "")" @onclick="() => audioTab = false">Video storyboard</button> }
+                    @if (Workspace.Working.Outputs != MediaOutput.Video) { <button class="@(AudioCanvas ? "active" : "")" @onclick="() => audioTab = true">Audio script</button> }
+                    <button class="chat-toggle" aria-controls="studio-conversation" @onclick="ToggleConversation">Conversation</button>
+                </div>
+                <div class="workspace-grid @(chatOpen ? "show-chat" : "") @(chatDismissed ? "hide-chat" : "")">
+                    <aside class="scene-strip" aria-label="Ordered scenes or script parts">
+                        @foreach (var item in Items)
+                        {
+                            <button class="scene-tile @(SelectedId == item.Id ? "selected" : "")" data-item-id="@item.Id"
+                                @onclick="() => Act(() => Workspace.SelectItem(item.Id))"><span class="mini-thumbnail">@item.Number.ToString("00")</span>
+                                <strong>@item.Title</strong><span>~@item.Seconds s estimate</span></button>
+                        }
+                        <button id="@(AudioCanvas ? "media-add-audio" : "media-add-scene")" class="add-item" disabled="@Workspace.Busy" @onclick="AddItem">
+                            <StudioIcon Name="create" />Add @(AudioCanvas ? "part" : "scene")</button>
+                    </aside>
+                    <div class="scene-editor">
+                        @if (SelectedScene is { } selectedScene)
+                        {
+                            @if (selectedScene.Motion is { } motion)
+                            {
+                                <StudioMotionPreview Motion="motion" />
+                            }
+                            else
+                            {
+                            <div class="storyboard-stage @selectedScene.Kind.ToString().ToLowerInvariant()" aria-label="Storyboard preview, not rendered video">
+                                <span class="stage-label">STORYBOARD PREVIEW · NOT RENDERED</span>
+                                <h2>@selectedScene.Title</h2><pre>@selectedScene.Text</pre>
+                            </div>
+                            }
+                            <div class="inspector"><div class="inspector-header"><h2>Scene details</h2><div class="actions">
+                                <button disabled="@Workspace.Busy" @onclick="() => MoveItem(-1)" aria-label="Move scene earlier">↑</button>
+                                <button disabled="@Workspace.Busy" @onclick="() => MoveItem(1)" aria-label="Move scene later">↓</button>
+                                <button disabled="@Workspace.Busy" @onclick="DeleteItem">Delete scene</button></div></div>
+                                <div class="field-row"><label>Title<input id="selected-scene-title" value="@selectedScene.Title" maxlength="100" disabled="@Workspace.Busy" @oninput='e => SceneEdit("title", Text(e))' /></label>
+                                    <label>Layout<select value="@selectedScene.Kind" disabled="@Workspace.Busy" @onchange='e => SceneEdit("kind", Text(e))'><option>Title</option><option>Code</option><option>Diagram</option></select></label></div>
+                                <label>On-screen content<textarea id="selected-scene-text" value="@selectedScene.Text" maxlength="5000" disabled="@Workspace.Busy" @oninput='e => SceneEdit("text", Text(e))'></textarea></label>
+                                <label>Narration<textarea id="selected-scene-script" value="@selectedScene.Script" maxlength="3000" disabled="@Workspace.Busy" @oninput='e => SceneEdit("script", Text(e))'></textarea></label>
+                                <details><summary>Visuals and timing</summary>
+                                    @if (selectedScene.Motion is not null) { <p>Animated mechanism · @selectedScene.Motion.Entities.Length entities · @selectedScene.Motion.Stages.Length stages</p>
+                                        <button data-clear-motion disabled="@Workspace.Busy" @onclick='() => SceneEdit("clear-motion", "")'>Remove animation</button> }
+                                    <label>Illustration prompt<textarea id="selected-scene-illustration" value="@selectedScene.IllustrationPrompt" data-saved-illustration="@selectedScene.IllustrationPrompt" maxlength="2000" disabled="@Workspace.Busy" @oninput='e => SceneEdit("illustration", Text(e))'></textarea></label>
+                                    <label title="A creative target, not a measured duration or resource limit.">Scene target (seconds)<input type="number" min="1" max="1800" value="@ItemTarget" disabled="@Workspace.Busy" @onchange="ItemTargetChange" /></label>
+                                </details>
+                            </div>
+                        }
+                        else if (SelectedPart is { } selectedPart)
+                        {
+                            <div class="audio-stage"><StudioIcon Name="artifacts" /><span title="Estimated at150 spoken words per minute; output duration is measured after production.">Audio script · ~@MediaDraftRules.EstimateSeconds(selectedPart.Text) seconds estimated</span></div>
+                            <div class="inspector"><div class="inspector-header"><h2>Script part @Items.First(i => i.Id == selectedPart.Id).Number</h2><div class="actions">
+                                <button disabled="@Workspace.Busy" @onclick="() => MoveItem(-1)" aria-label="Move part earlier">↑</button>
+                                <button disabled="@Workspace.Busy" @onclick="() => MoveItem(1)" aria-label="Move part later">↓</button>
+                                <button disabled="@Workspace.Busy" @onclick="DeleteItem">Delete part</button></div></div>
+                                <label>Narration<textarea id="selected-audio-script" maxlength="8000" value="@selectedPart.Text" disabled="@Workspace.Busy" @oninput="e => PartEdit(Text(e))"></textarea></label>
+                                <details><summary>Timing</summary><label title="A creative target, not a measured duration or resource limit.">Part target (seconds)<input type="number" min="1" max="1800" value="@ItemTarget" disabled="@Workspace.Busy" @onchange="ItemTargetChange" /></label></details>
+                            </div>
+                        }
+                        else { <div class="canvas-empty"><StudioIcon Name="storyboard" /><h2>A little space for a big idea.</h2><p>Add a @(AudioCanvas ? "script part" : "scene"), or ask the author to build from your brief.</p><button class="primary" disabled="@Workspace.Busy" @onclick="AddItem">Add your first @(AudioCanvas ? "part" : "scene")</button></div> }
+                    </div>
+                    <StudioConversation @key="Workspace.Draft.DraftId" Workspace="Workspace" SendRequested="Propose" SetupRequested="OpenVoiceSettings" CloseRequested="HideConversation" />
+                </div>
+            </section>
+        }
+        else if (Workspace.View == MediaView.Jobs)
+        {
+            <section id="media-jobs" class="library-page"><header class="page-header"><div><span class="eyebrow">GENERATION HISTORY</span><h1>Jobs</h1></div><button id="media-refresh" @onclick="RefreshHistory">Refresh</button></header>
+                <div class="filter-row"><label>Project<select @bind="projectFilter"><option value="">All projects</option>@foreach (var project in Workspace.Projects.List()) { <option value="@project.Id">@project.Content.Title</option> }</select></label>
+                    <label>Status<select @bind="statusFilter"><option value="">All statuses</option><option value="running">Running</option><option value="completed">Completed</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option><option value="interrupted">Interrupted</option></select></label></div>
+                @foreach (var issue in Workspace.History.Issues) { <div class="error-banner" role="alert">@issue.Message <details><summary>Technical details</summary>@issue.RecordId · @issue.Code</details></div> }
+                <div class="job-list">
+                    @foreach (var job in FilteredJobs)
+                    {
+                        <button class="job-row @(job.Attempt.Id == selectedJob ? "selected" : "")" @onclick="() => selectedJob = job.Attempt.Id">
+                            <StudioIcon Name="jobs" /><div><strong>@job.Project.Content.Title</strong><span>@job.Project.Content.Outputs · @job.Attempt.CreatedAt.ToLocalTime().ToString("g")</span></div>
+                            <span class="status-badge @job.Status.Status">@JobLabel(job.Status.Status)</span><span>@job.Status.Stage</span>
+                        </button>
+                    }
+                    @if (!FilteredJobs.Any()) { <div class="canvas-empty"><h2>No generation jobs yet.</h2><p>Submit a saved storyboard when you are ready to produce.</p></div> }
+                </div>
+                @if (Workspace.History.Jobs.FirstOrDefault(j => j.Attempt.Id == selectedJob) is { } selected)
+                {
+                    <section class="job-detail"><h2>@selected.Project.Content.Title</h2><p id="media-job-status">@JobLabel(selected.Status.Status) · @selected.Status.Stage</p>
+                        @foreach (var output in selected.Artifacts?.Outputs ?? []) { <p>@output.Output: verified candidate available</p> }
+                        @if (selected.Status.Status == "failed")
+                        {
+                            <p data-job-failure role="alert">@JobFailure(selected)</p>
+                            <p>Any available output is independently verified, not overall success.</p>
+                        }
+                        <div class="actions"><button @onclick="() => OpenProject(selected.Project)">Open storyboard</button><button @onclick="() => Navigate(MediaView.Projects)">View artifacts</button>
+                            @if (selected.Status.Status is "running" or "cancelling") { <button id="media-cancel-job" @onclick="() => Act(() => Workspace.Production.Cancel(selected.Attempt.Id))">Request cancellation</button> }</div>
+                        <details><summary>Technical details</summary><p>@selected.Attempt.Id / revision @selected.Project.Revision / @selected.Status.Liveness / @selected.Status.ErrorCode</p></details>
+                    </section>
+                }
+            </section>
+        }
+        else
+        {
+            <section id="media-projects" class="library-page"><header class="page-header"><div><span class="eyebrow">YOUR MEDIA LIBRARY</span><h1>Artifacts</h1></div><button @onclick="RefreshHistory">Refresh</button></header>
+                <div class="filter-row"><label>Medium<select @bind="mediumFilter"><option value="">Audio and video</option><option value="audio-master">Audio</option><option value="candidate-mp4">Video</option></select></label></div>
+                @foreach (var issue in Workspace.History.Issues) { <p class="error-banner" role="alert">@issue.Message</p> }
+                @foreach (var deletion in (Workspace.History.Deletions ?? []).Where(d => d.State == "deleting"))
+                {
+                    <p role="alert">The @deletion.Output deletion is incomplete. Close any player using that output, then retry.
+                        <button data-retry-deletion @onclick="() => RetryDeletion(deletion)">Retry deletion</button></p>
+                }
+                <div class="artifact-grid">
+                    @foreach (var artifact in Workspace.History.Artifacts.Where(a => mediumFilter.Length == 0 || a.Kind == mediumFilter))
+                    {
+                        <article class="artifact-tile">
+                        <button class="artifact-card" data-artifact-kind="@artifact.Kind" data-attempt-id="@artifact.AttemptId" @onclick="() => selectedArtifact = artifact"><div class="artifact-cover">
+                            @if (Workspace.CoverImages.TryGetValue(MediaWorkspace.CoverKey(artifact.Project), out var image))
+                            { <img data-generated-cover src="@image" alt="Generated illustrative cover for @artifact.Project.Content.Title" /> }
+                            else { <span class="cover-pending">Cover not generated</span> }
+                            <span class="media-kind-badge" role="img" aria-label="@(artifact.Kind == "audio-master" ? "Audio" : "Video")" title="@(artifact.Kind == "audio-master" ? "Audio" : "Video")"><StudioIcon Name="@(artifact.Kind == "audio-master" ? "audio" : "video")" /></span>
+                        </div>
+                            <strong>@artifact.Project.Content.Title</strong><span>@(artifact.DurationSeconds is { } duration ? $"{duration:F1}s measured" : "Verified media") · @artifact.CreatedAt.ToLocalTime().ToString("d")</span><span class="candidate-label">Candidate · @JobLabel(artifact.OverallStatus) job</span></button>
+                        @if (!Workspace.CoverImages.ContainsKey(MediaWorkspace.CoverKey(artifact.Project)))
+                        {
+                            <button data-card-generate-cover disabled="@(Workspace.Busy || Workspace.CoverSelection is null)"
+                                title="One title-only image request using the selected chat model; separate from this historical job"
+                                @onclick="() => Run(() => Workspace.GenerateCoverAsync(artifact))">Generate cover</button>
+                        }
+                        </article>
+                    }
+                </div>
+                @if (Workspace.History.Artifacts.Length == 0) { <div class="canvas-empty"><h2>Your finished media belongs here.</h2><p>Verified outputs appear after generation. Nothing is published automatically.</p></div> }
+            </section>
+        }
+    </main>
+</div>
+
+<StudioDialog Title="Projects" Open="@switcher" Closed="() => switcher = false">
+    <button class="primary" id="media-new" disabled="@Workspace.Busy" @onclick="NewProject">New project</button>
+    @foreach (var project in Workspace.Projects.List())
+    { <button class="project-choice media-open-project" data-media-id="@project.Id" disabled="@Workspace.Busy" @onclick="() => OpenProject(project)"><strong>@project.Content.Title</strong><span>@project.Content.Outputs · revision @project.Revision</span></button> }
+    @foreach (var draft in Workspace.Drafts.List().Where(d => d.ProjectId is null))
+    { <button class="project-choice" disabled="@(Workspace.Busy || Workspace.SourcesBusy)" @onclick="() => OpenWorkingDraft(draft.DraftId)"><strong>@draft.Frame.Content.Title</strong><span>Working draft · @draft.Frame.Content.Outputs</span></button> }
+</StudioDialog>
+<StudioDialog Title="Set up Media Studio" Open="@setupOpen" Closed="() => setupOpen = false">
+    @if (setupOpen) { <MediaStudio.App.Components.Setup.SetupWizard Completed="SetupCompleted" /> }
+</StudioDialog>
+<StudioDialog Title="Settings" Open="@settings" Closed="() => settings = false">
+    <button id="media-open-setup" disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)" @onclick="OpenSetup">Setup wizard (local models, Azure, cloud consent)</button>
+    <label>Appearance<select @bind="theme" @bind:after="SaveTheme"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label>
+    <h3>Writing</h3>
+    <StudioModelSelect Workspace="Workspace" />
+    <h3>Speech</h3>
+    <label>Speech model<select id="media-speech-provider" value="@(Workspace.Voice.IsCloud ? Workspace.Providers.State.Speech is { } selectedSpeech ? selectedSpeech.Connection + "|" + selectedSpeech.Model : "off" : Workspace.Voice.Provider)" disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)"
+        @onchange="e => Act(() => Workspace.SelectSpeechProvider(Text(e)))">
+        <option value="off">Off</option>
+        @foreach (var connection in Workspace.Providers.State.Connections)
+        {
+            @foreach (var model in connection.SpeechModels ?? [])
+            { <option value="@(connection.Id + "|" + model)">@model · cloud</option> }
+        }
+        <option value="Whisper">Whisper · local batch speech</option></select></label>
+    @if (Workspace.Voice.UnavailableReason is { } voiceReason) { <p role="status">@voiceReason</p> }
+    <button id="media-configure-voice" disabled="@Workspace.Voice.Busy" @onclick="SetUpVoice">Set up local Whisper</button>
+    <p class="muted">Choosing cloud speech allows audio upload and transcription cost when you press Record.</p>
+    <details><summary>Speech setup details</summary><p>@Workspace.Voice.ProviderDetails</p><p>@Workspace.Voice.Status</p><button disabled="@Workspace.Voice.Busy" @onclick="ConfigureVoice">Import an existing Whisper configuration</button><p>An explicit --voice-config launch option takes precedence over saved setup. Whisper uses the existing Base model. No model download or automatic fallback.</p></details>
+    <h3>PDF reading</h3><StudioPdfSelect Workspace="Workspace" />
+    <details id="media-ocr-details"><summary>PDF reading details</summary><p>Local Toolkit PdfPig reads searchable PDF text. Text and Markdown remain inert.</p><p>mistral-ocr-4-0 · version 1 · on your configured Foundry resource. Native Toolkit provider with SDK Entra authentication. Selecting it does not send documents or verify data-plane authentication/quality. No automatic fallback.</p></details>
+    <h3>Illustrations</h3>
+    <label>Illustration model<select id="media-illustration-provider" value="@Workspace.IllustrationSelection"
+            data-selected-image-provider="@Workspace.IllustrationSelection"
+            disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)" @onchange="ChooseIllustrations">
+        @if (Workspace.Providers.State.LocalImage is null)
+        { <option value="existing">@(Workspace.ProductionConfigured ? "Saved illustration setup" : "No illustration model selected")</option> }
+        @if (Workspace.RoutedIllustrationAvailable)
+        { <option value="routed">Settings illustration route (SVG) · @Workspace.RouteLabel</option> }
+        <option value="local" disabled="@(Workspace.Providers.State.LocalImage is null)">@(Workspace.Providers.State.LocalImage is null ? "Local illustrations (configure first)" : "Local illustrations")</option>
+        @foreach (var connection in Workspace.Providers.State.Connections)
+        {
+            @foreach (var model in connection.ChatModels ?? [])
+            { <option value="@("chat|" + connection.Id + "|" + model)">Chat illustrations (SVG) · @model</option> }
+        }
+        <option value="native" disabled="@(Workspace.Providers.State.ImageFallback is null)">Image generation · gpt-image-1-mini</option>
+    </select></label>
+    @if (Workspace.IllustrationSelection == "existing")
+    { <p data-illustration-existing-notice>@(Workspace.ProductionConfigured ? "Uses your saved setup, which may be cloud. Review its model and cost before generation." : "Configure a local model or choose a chat model above.")</p> }
+    @if (Workspace.Providers.State.NativeImages || Workspace.Providers.State.ChatIllustration is not null || Workspace.Providers.State.RoutedIllustration)
+    { <p data-illustration-cloud-notice>Cloud illustrations send saved prompts to your selected model and incur cost only after generation approval.</p> }
+    @if (Workspace.Providers.State.ChatIllustration is { } illustrationModel && Workspace.Providers.Connection(illustrationModel).Authentication == "user-secrets")
+    { <p class="muted">The API key is stored as plaintext on this device, not in an encrypted vault.</p> }
+    <details id="media-illustration-details"><summary>Illustration details</summary><p>Chat-authored SVG uses the selected IChatClient with the Responses adapter for Foundry. Local chat endpoints remain supported. Image generation uses one low-quality 1536×1024 PNG per illustrated scene, fitted locally to 1920×1080 with a caption-safe margin. Cloud authentication/quality is not verified by setup.</p><p>Historical thumbnails/covers were Copilot-authored SVG rasterized locally; no runtime illustration model receipt was pinned.</p></details>
+    <h3>Generation</h3><p>@(Workspace.ProductionConfigured ? "Review the saved production setup before generating." : Workspace.ProductionProblem ?? "Production setup is not supplied. Editing and saving still work.")</p><button @onclick="() => Act(Workspace.ReviewSetup)">Review current configuration</button>
+    <details id="provider-connections-panel"><summary>Manage connections / Add provider</summary><StudioProviderConnections Workspace="Workspace" /></details>
+    <details id="media-settings-advanced"><summary>Advanced settings</summary>
+        <p>@Workspace.ProviderMode</p><p>@Workspace.Setup</p>
+        <p id="media-decisions-availability">@ModelConnection.NativeDecisionsNote</p>
+        @if (Workspace.Providers.State.NativeDecision is { } native)
+        { <p id="media-selected-native-decisions">@Workspace.Providers.Connection(native).Name · @native.Model · native /decisions. Future work only; saved reviews remain unchanged.</p> }
+        <details><summary>Developer provider import</summary><button id="media-import-models" disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)" @onclick="ImportModels">Import private provider settings</button></details>
+        <details><summary>Developer local illustration import</summary><button id="media-import-local-image" disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)" @onclick="ImportLocalIllustrations">Import existing local illustration connection</button></details>
+        <p>Draft @Workspace.Draft.DraftId · version @Workspace.Draft.Version</p><p>@TeachingGuidance.Identity.Version</p>
+    </details>
+</StudioDialog>
+<StudioDialog Title="Review generation" Open="@submitOpen" Closed="() => submitOpen = false">
+    <h3>@Workspace.Saved?.Content.Title</h3>
+    <div class="cover-generation-option">
+        <label><input type="checkbox" checked="@Workspace.GenerateLibraryCover" disabled="@Workspace.Busy"
+            aria-describedby="cover-generation-description"
+            @onchange="e => Act(() => Workspace.ChangeCoverGeneration(e.Value is true))" /> Generate library cover</label>
+        <p id="cover-generation-description" data-cover-generation-review role="@(Workspace.CoverSetupError is null ? null : "alert")">@Workspace.CoverReviewLabel</p>
+    </div>
+    <dl class="generation-summary">
+        <div><dt>Make</dt><dd>@(Workspace.Working.Outputs == MediaOutput.Both ? "Audio and video" : Workspace.Working.Outputs.ToString())</dd></div>
+        <div><dt>Duration</dt><dd>@Workspace.Draft.Frame.Direction.TargetSeconds s target · @Workspace.Working.MaximumSeconds s maximum</dd></div>
+        <div><dt>Production</dt><dd>@Workspace.GenerationProviderLabel</dd></div>
+    </dl>
+    <label>Production maximum (seconds)<input id="media-production-maximum" type="number" min="1" max="1800"
+        value="@Workspace.Working.MaximumSeconds" disabled="@Workspace.Busy"
+        @onchange="e => Act(() => Workspace.ChangeMaximumSeconds(int.Parse(Text(e))))" /></label>
+    <p class="muted">Changing this limit saves a new revision for explicit approval; it does not change the creative target.</p>
+    <div data-narration-estimates>
+        @foreach (var estimate in Workspace.NarrationEstimates)
+        { <p>@estimate.Output: @estimate.Words words · ~@estimate.Seconds seconds estimated.</p> }
+        <p class="muted">Speech-only estimate at 150 words/minute, before pauses. Voice, technical terms and pacing can change the actual measured duration.</p>
+    </div>
+    @if (Workspace.EstimatedDurationOverrun)
+    {
+        <p data-duration-warning role="alert">The script estimate exceeds the production maximum. Shorten the script or explicitly increase the maximum before generating. Production will fail rather than truncate audio if actual samples exceed the approved limit.</p>
+        <label><input id="media-duration-risk" type="checkbox" checked="@Workspace.DurationRiskAccepted"
+            @onchange="e => Act(() => Workspace.AcceptDurationRisk(e.Value is true))" /> I understand the estimate is over the limit and want to try this exact maximum anyway.</label>
+    }
+    <p class="muted">Starts a job from your saved storyboard. Actual duration is measured after production. Nothing is published.</p>
+    <details><summary>Technical details</summary><p>Saved revision @Workspace.Saved?.Revision</p><p>@Workspace.Setup</p></details>
+    <button class="primary" id="media-confirm-generate" disabled="@(Workspace.Busy || Workspace.Confirmation is null || Workspace.CoverSetupError is not null || Workspace.EstimatedDurationOverrun && !Workspace.DurationRiskAccepted)" @onclick="Generate">Generate @Workspace.Working.Outputs.ToString().ToLowerInvariant()</button>
+</StudioDialog>
+<StudioDialog Title="Sources" Open="@sourcesOpen" Closed="() => sourcesOpen = false">
+    <StudioPdfSelect Workspace="Workspace" />
+    <details><summary>File limits</summary><p>PDF, PNG, text or Markdown. Up to20MB each (PNG up to2MB),100PDF pages and five sources. Image inspection requires explicit upload; OCR and geometry are not semantic understanding.</p></details>
+    @if (Workspace.SourcesBusy) { <p role="status">@Workspace.SourceStatus</p><button @onclick="Workspace.CancelSources">Cancel reading</button> }
+    @foreach (var source in Workspace.SourceList)
+    {
+        <section class="source-detail" data-source-id="@source.Id"><h3>@source.Name</h3>
+            <p>@source.Projection.Pages.Length pages · @source.Projection.Chunks.Length text sections</p>
+            @foreach (var limitation in source.Projection.Limitations) { <p class="muted">@limitation</p> }
+            <button disabled="@(Workspace.Busy || Workspace.SourcesBusy)" @onclick="() => Act(() => Workspace.RemoveSource(source.Id))">Remove from working draft</button>
+            @if (source.MediaType == "application/pdf" || source.MediaType == "image/png" && Workspace.Sources.Ocr is not null)
+            { <button data-read-pdf disabled="@(Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending)"
+                @onclick="() => ReadPdf(source.Id)">@(source.MediaType == "image/png" ? "Read image" : "Read PDF")</button> }
+            <StudioSourceDetail Workspace="Workspace" Source="source" />
+            <details><summary>Extracted text and source pages</summary>
+                @foreach (var chunk in source.Projection.Chunks)
+                { <article><strong>@chunk.SectionId · @(chunk.PageNumber is { } page ? "Original page " + page : chunk.PageId is { } pageId ? $"Source page {pageId} (page number unknown)" : "Text source")</strong><pre>@chunk.Text</pre></article> }
+            </details><details><summary>Source details</summary><p>@source.Bytes bytes · @source.Provider</p><p>@source.Id / @source.OriginalSha256</p></details>
+        </section>
+    }
+    @if (Workspace.SourceList.Length == 0) { <p>No sources attached. Use Add sources or drop a document on Create.</p> }
+</StudioDialog>
+<StudioDialog Title="Read source" Open="@(ocrSource is not null)" Closed="() => ocrSource = null">
+    @if (ocrSource is { } sourceId && Workspace.Sources.Ocr is { } ocr)
+    {
+        <p>Upload “@Workspace.SourceList.Single(s => s.Id == sourceId).Name” to @Workspace.PdfReaderLabel? The whole attached PDF or image is sent and incurs cost. An excerpt uploads only its own bytes, not its parent paper. Vision interpretation can be incorrect; review the original.</p>
+        <details><summary>OCR request details</summary><p>@ocr.Endpoint · @ocr.Model · version @ocr.ModelVersion. Maximum @ocr.MaximumBytes bytes / @ocr.MaximumPages pages. No page selection or automatic fallback.</p></details>
+        <button data-confirm-pdf class="primary" disabled="@(Workspace.Busy || Workspace.SourcesBusy)" @onclick="() => RunOcr(sourceId)">Upload and read source</button>
+    }
+</StudioDialog>
+<StudioDialog Title="Upload document" Open="@(Workspace.UploadConsent.Pending is not null)" Closed="() => Workspace.UploadConsent.Answer(false)">
+    @if (Workspace.UploadConsent.Pending is { } upload)
+    {
+        <p>Auto routing wants to send “@(Workspace.SourceList.FirstOrDefault(s => s.Id == upload.DocumentId)?.Name ?? upload.DocumentId)” to @upload.ProviderName. The whole document is uploaded and may incur cost. Decline to read it with a local extractor instead.</p>
+        <button data-confirm-upload class="primary" @onclick="() => Workspace.UploadConsent.Answer(true)">Upload and read</button>
+        <button data-decline-upload @onclick="() => Workspace.UploadConsent.Answer(false)">Keep it local</button>
+    }
+</StudioDialog>
+<StudioDialog Title="Generated candidate" Open="@(selectedArtifact is not null)" Closed="() => selectedArtifact = null">
+    @if (selectedArtifact is { } viewing)
+    {
+        var observedStatus = Workspace.History.Jobs.FirstOrDefault(j => j.Status.AttemptId == viewing.AttemptId)?.Status.Status ?? "unavailable";
+        <h3>@viewing.Project.Content.Title</h3><p class="muted" data-preview-job-status="@observedStatus">Verified candidate · @JobLabel(observedStatus) job · not human release approval</p>
+        @if (viewing.Kind == "audio-master") { <audio id="media-audio" controls preload="metadata" src="@ArtifactUri(viewing)" @onerror='() => Workspace.Error = "Audio playback failed. Refresh this job to verify its output."'></audio> }
+        else { <video id="media-video" controls preload="metadata" src="@ArtifactUri(viewing)" @onerror='() => Workspace.Error = "Video playback failed. Refresh this job to verify its output."'>
+            @if (viewing.HasCaptions) { <track kind="captions" src="@($"/hybrid-result/{viewing.AttemptId}/captions.vtt")" srclang="en" label="Captions" default /> }</video> }
+        <div class="actions"><button @onclick="() => OpenArtifactSource(viewing)">Open source storyboard</button><button @onclick="() => SaveCopy(viewing)">Save a copy</button>
+            <button data-delete-artifact disabled="@(observedStatus is not ("completed" or "failed" or "cancelled" or "interrupted"))"
+                @onclick="() => RequestDeletion(viewing)">Delete artifact</button></div>
+        <details><summary>Script / transcript</summary><p>@string.Join("\n\n", viewing.Kind == "audio-master" ? viewing.Project.Content.AudioScript?.Select(p => p.Text) ?? [] : viewing.Project.Content.Storyboard?.Scenes.Select(s => s.Script) ?? [])</p></details>
+        <details><summary>Technical details</summary><p>@viewing.AttemptId / @viewing.Sha256</p></details>
+        @if (!Workspace.CoverImages.ContainsKey(MediaWorkspace.CoverKey(viewing.Project)))
+        {
+            <p class="muted">Generate one illustrative cover for this saved revision's audio and video cards using @(Workspace.CoverSelection?.Model ?? "a chat model selected in Settings"). Only the project title is sent; this uses one image request.</p>
+            <button data-generate-cover disabled="@(Workspace.Busy || Workspace.CoverSelection is null)"
+                @onclick="() => Run(() => Workspace.GenerateCoverAsync(viewing))">@(Workspace.CoverGenerating ? "Generating cover..." : "Generate cover")</button>
+            @if (Workspace.CoverGenerating) { <button @onclick="Workspace.CancelAuthoring">Cancel cover request</button> }
+        }
+        else { <p class="muted">Generated cover retained for this exact saved revision.</p> }
+    }
+</StudioDialog>
+<StudioDialog Title="Delete artifact" Open="@(deletionTarget is not null)" Closed="() => deletionTarget = null">
+    @if (deletionTarget is { } deleting)
+    {
+        <h3>@deleting.Project.Content.Title</h3>
+        <p>Permanently delete this @(deleting.Kind == "audio-master" ? "audio" : "video") output's committed media and export files? This cannot be undone.</p>
+        <p>The saved project, job record and other output remain. Production caches and copies you saved elsewhere are not erased.</p>
+        <div class="actions"><button @onclick="() => deletionTarget = null">Keep artifact</button>
+            <button data-confirm-delete-artifact @onclick="ConfirmDeletion">Permanently delete</button></div>
+    }
+</StudioDialog>
+
+</div>
+@code {
+    readonly (string Id, string Title, string Icon, MediaView View)[] destinations =
+        [("nav-create", "Create", "create", MediaView.Create), ("nav-review", "Storyboard", "storyboard", MediaView.Review),
+         ("nav-jobs", "Jobs", "jobs", MediaView.Jobs), ("nav-projects", "Artifacts", "artifacts", MediaView.Projects)];
+    string theme = "dark", projectFilter = "", statusFilter = "", mediumFilter = "", selectedJob = "";
+    bool setupOpen, switcher, settings, sourcesOpen, submitOpen, audioTab, chatOpen, chatDismissed, creating;
+    async Task ToggleConversation()
+    {
+        try
+        {
+            chatOpen = !await JS.InvokeAsync<bool>("studioConversationVisible");
+            chatDismissed = !chatOpen;
+        }
+        catch (JSException error) { Workspace.Error = "Conversation visibility failed: " + error.Message; }
+        catch (JSDisconnectedException error) { Console.Error.WriteLine("Conversation disconnected during window cleanup: " + error.Message); }
+    }
+    void HideConversation() { chatOpen = false; chatDismissed = true; }
+    string? creatingFrameHash;
+    MediaLibraryArtifact? selectedArtifact;
+    MediaLibraryArtifact? deletionTarget;
+    string? ocrSource;
+    readonly CancellationTokenSource stop = new();
+    Task? poll;
+    bool AudioCanvas => Workspace.Working.Outputs == MediaOutput.Audio || Workspace.Working.Outputs == MediaOutput.Both && audioTab;
+    bool HasDraftItems => (Workspace.Working.Storyboard?.Scenes.Length ?? 0) > 0
+        || (Workspace.Working.AudioScript?.Length ?? 0) > 0;
+    string? SelectedId => Items.FirstOrDefault(i => i.Id == (Workspace.SelectedItemId ?? Workspace.Draft.Frame.SelectedItemId)).Id ?? Items.FirstOrDefault().Id;
+    string[] PendingLinks => System.Text.RegularExpressions.Regex.Matches(Workspace.Working.Prompt, @"https://[^\s<>]+")
+        .Select(m => m.Value.TrimEnd('.', ',', ')', ']')).Distinct().ToArray();
+    ProposedScene? SelectedScene => AudioCanvas ? null : Workspace.Working.Storyboard?.Scenes.ElementAtOrDefault(Array.IndexOf(Workspace.Draft.Frame.SceneIds, SelectedId));
+    AudioScriptPart? SelectedPart => !AudioCanvas ? null : Workspace.Working.AudioScript?.FirstOrDefault(p => p.Id == SelectedId);
+    int ItemTarget => SelectedId is { } id && Workspace.Draft.Frame.ItemTargets.TryGetValue(id, out var value) ? value
+        : MediaDraftRules.EstimateSeconds(SelectedScene?.Script ?? SelectedPart?.Text ?? "");
+    string SavedLabel => Workspace.SavedMatchesDraft ? "Saved" : "Unsaved changes";
+    IEnumerable<(string Id, string Title, int Number, int Seconds)> Items => AudioCanvas
+        ? (Workspace.Working.AudioScript ?? []).Select((p, i) => (p.Id, $"Part {i + 1}", i + 1, Workspace.Draft.Frame.ItemTargets.GetValueOrDefault(p.Id, MediaDraftRules.EstimateSeconds(p.Text))))
+        : (Workspace.Working.Storyboard?.Scenes ?? []).Select((s, i) => (Workspace.Draft.Frame.SceneIds[i], s.Title, i + 1, Workspace.Draft.Frame.ItemTargets.GetValueOrDefault(Workspace.Draft.Frame.SceneIds[i], MediaDraftRules.EstimateSeconds(s.Script))));
+    IEnumerable<MediaHistoryJob> FilteredJobs => Workspace.History.Jobs.Where(j => (projectFilter.Length == 0 || j.Project.Id == projectFilter) && (statusFilter.Length == 0 || j.Status.Status == statusFilter));
+    protected override void OnInitialized()
+    {
+        Workspace.Changed += OnChanged;
+        Workspace.Voice.Changed += OnChanged;
+        var path = System.IO.Path.Combine(Workspace.StateRoot, "ui-preferences.json");
+        if (System.IO.File.Exists(path))
+        {
+            var value = Json.Read<Dictionary<string, string>>(path).GetValueOrDefault("theme");
+            if (value is "dark" or "light" or "system") theme = value;
+        }
+        poll = Poll();
+        setupOpen = Setup.ShowOnStartup;
+    }
+    void OpenSetup() { settings = false; setupOpen = true; }
+    void SetupCompleted() => setupOpen = false;
+    void OnChanged() => _ = InvokeAsync(() => { NavigateCreatedDraft(); StateHasChanged(); });
+    void NavigateCreatedDraft()
+    {
+        if (creating && Workspace.View == MediaView.Create && HasDraftItems
+            && Files.Fingerprint(Workspace.Draft.Frame) != creatingFrameHash)
+            Workspace.View = MediaView.Review;
+    }
+    async Task Poll()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(stop.Token))
+                await InvokeAsync(() => { if (Workspace.View is MediaView.Jobs or MediaView.Projects) Act(() => { Workspace.RefreshHistory(); Workspace.Refresh(); }); StateHasChanged(); });
+        }
+        catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
+    }
+    void SaveTheme() => Json.Write(System.IO.Path.Combine(Workspace.StateRoot, "ui-preferences.json"), new Dictionary<string, string> { ["theme"] = theme });
+    void OpenVoiceSettings() => settings = true;
+    async Task ImportModels()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Choose owner-private provider settings (no secrets in this file)",
+            Filter = "JSON configuration|*.json", CheckFileExists = true, Multiselect = false };
+        if (dialog.ShowDialog() == true)
+            await Run(() => Workspace.ConfigureModelsAsync(PrivateFiles.Read<ModelProviderState>(dialog.FileName)
+                with { Version = Workspace.Providers.State.Version }));
+    }
+    void SetUpVoice() => Act(() =>
+    {
+        var model = Transcription.DefaultModelPath;
+        if (!System.IO.File.Exists(model))
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Choose the Whisper Base model (ggml-base.bin)",
+                Filter = "Whisper Base model|ggml-base.bin", CheckFileExists = true, Multiselect = false };
+            if (dialog.ShowDialog() != true) return;
+            model = dialog.FileName;
+        }
+        Workspace.Voice.SetUp(model);
+    });
+    void ConfigureVoice() => Act(() =>
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Choose existing local Whisper configuration",
+            Filter = "JSON configuration|*.json", CheckFileExists = true, Multiselect = false };
+        if (dialog.ShowDialog() == true) Workspace.Voice.Configure(dialog.FileName);
+    });
+    async Task ChooseIllustrations(ChangeEventArgs e) => await Run(() => Workspace.SelectIllustrationsAsync(Text(e)));
+    async Task ImportLocalIllustrations()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Choose existing local IChatClient illustration connection",
+            Filter = "Private JSON connection|*.json", CheckFileExists = true, Multiselect = false };
+        if (dialog.ShowDialog() == true) await Run(() => Workspace.ConfigureModelsAsync(
+            Workspace.Providers.State with { LocalImage = PrivateFiles.Read<PlannerConfiguration>(dialog.FileName), NativeImages = false, ChatIllustration = null },
+            changeSpeech: false));
+    }
+    void Navigate(MediaView view) { Workspace.View = view; if (view is MediaView.Jobs or MediaView.Projects) RefreshHistory(); }
+    void RefreshHistory() => Act(Workspace.RefreshHistory);
+    void RequestDeletion(MediaLibraryArtifact artifact) { selectedArtifact = null; deletionTarget = artifact; }
+    void ConfirmDeletion() => Act(() =>
+    {
+        var artifact = deletionTarget ?? throw new InvalidOperationException("Choose an artifact to delete.");
+        try { Workspace.Production.DeleteMediaOutput(artifact.AttemptId,
+            artifact.Kind == "audio-master" ? "audio" : "video", artifact.Sha256); deletionTarget = null; }
+        finally { Workspace.RefreshHistory(); }
+    });
+    void RetryDeletion(MediaOutputDeletion deletion) => Act(() =>
+    {
+        try { Workspace.Production.DeleteMediaOutput(deletion.AttemptId, deletion.Output, deletion.PrimarySha256); }
+        finally { Workspace.RefreshHistory(); }
+    });
+    void Act(Action action) { try { Workspace.Error = null; action(); } catch (Exception error) { Workspace.Error = error.Message; } }
+    async Task Run(Func<Task> action) { try { Workspace.Error = null; await action(); } catch (Exception error) { Workspace.Error = error.Message; } }
+    static string Text(ChangeEventArgs e) => e.Value?.ToString() ?? "";
+    void EditBrief(Func<MediaProjectContent, MediaProjectContent> edit, string? field = null) =>
+        Act(() => Workspace.EditFrame(Workspace.Draft.Frame with { Content = edit(Workspace.Working) }, "Edited project brief", field));
+    void InsertBriefVoice(string text)
+    {
+        var combined = string.IsNullOrWhiteSpace(Workspace.Working.Prompt) ? text : Workspace.Working.Prompt + "\n" + text;
+        if (combined.Length > 6000) throw new InvalidOperationException("The combined brief exceeds 6000 characters. Shorten it, then add the retained dictation.");
+        Workspace.EditFrame(Workspace.Draft.Frame with { Content = Workspace.Working with { Prompt = combined } }, "Added local dictation");
+    }
+    void TargetChange(ChangeEventArgs e) => Act(() => Workspace.EditFrame(Workspace.Draft.Frame with { Direction = Workspace.Draft.Frame.Direction with { TargetSeconds = int.Parse(Text(e)) } }, "Changed creative duration target"));
+    void AudienceChange(ChangeEventArgs e) => Act(() => Workspace.EditFrame(Workspace.Draft.Frame with { Direction = Workspace.Draft.Frame.Direction with { Audience = Text(e) } }, "Changed audience direction"));
+    void DepthChange(ChangeEventArgs e) => Act(() => Workspace.EditFrame(Workspace.Draft.Frame with { Direction = Workspace.Draft.Frame.Direction with { Depth = Text(e) } }, "Changed learning depth"));
+    async Task Create()
+    {
+        if (Workspace.Busy || Workspace.SourcesBusy || Workspace.Voice.InputPending || string.IsNullOrWhiteSpace(Workspace.Working.Prompt)) return;
+        if (!Workspace.AuthorConfigured)
+        { Workspace.Error = "Agent not connected. Add scenes or script parts manually, or configure authoring."; return; }
+        creating = true; creatingFrameHash = Files.Fingerprint(Workspace.Draft.Frame);
+        try
+        {
+            await Run(() => Workspace.ProposeAsync((HasDraftItems
+                ? $"Revise this current {Workspace.Working.Outputs} draft from the updated brief, preserving existing content unless the brief requires changing it: "
+                : $"Create a self-contained {Workspace.Working.Outputs} draft for the selected output from this brief: ") + Workspace.Working.Prompt));
+            NavigateCreatedDraft();
+        }
+        finally { creating = false; creatingFrameHash = null; }
+    }
+    async Task ComposerKey(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e) { if (e.CtrlKey && e.Key == "Enter") await Create(); }
+    Task Propose(string intent) => Run(() => Workspace.ProposeAsync(intent));
+    void AddItem() => Act(() =>
+    {
+        var id = (AudioCanvas ? "part-" : "scene-") + Guid.NewGuid().ToString("N");
+        Workspace.Mutate(AudioCanvas ? [new(MediaDraftOperationKind.AddPart, Part: new(id, "", 0))]
+            : [new(MediaDraftOperationKind.AddScene, id, Scene: new(TemplateKind.Title, "New scene", "", ""))],
+            AudioCanvas ? "Added an audio script part" : "Added a scene");
+        Workspace.SelectItem(id);
+    });
+    void DeleteItem() => Act(() => Workspace.Mutate([new(AudioCanvas ? MediaDraftOperationKind.DeletePart : MediaDraftOperationKind.DeleteScene, SelectedId)], AudioCanvas ? "Deleted an audio part" : "Deleted a scene"));
+    void MoveItem(int offset) => Act(() =>
+    {
+        var items = Items.ToArray(); var index = Array.FindIndex(items, i => i.Id == SelectedId); var target = index + offset;
+        if (index < 0 || target < 0 || target >= items.Length) return;
+        var before = offset < 0 ? items[target].Id : target + 1 < items.Length ? items[target + 1].Id : null;
+        Workspace.Mutate([new(AudioCanvas ? MediaDraftOperationKind.MovePart : MediaDraftOperationKind.MoveScene, SelectedId, before)], $"Moved {(AudioCanvas ? "part" : "scene")} {index + 1} {(offset < 0 ? "earlier" : "later")}");
+    });
+    void SceneEdit(string field, string value) => Act(() =>
+    {
+        var scene = SelectedScene ?? throw new InvalidOperationException("Select a scene first.");
+        var changed = field switch { "title" => scene with { Title = value }, "text" => scene with { Text = value },
+            "script" => scene with { Script = value },
+            "illustration" => scene with { IllustrationPrompt = string.IsNullOrWhiteSpace(value) ? null : value,
+                Visual = string.IsNullOrWhiteSpace(value) ? scene.Visual : null,
+                Motion = string.IsNullOrWhiteSpace(value) ? scene.Motion : null },
+            "kind" => scene with { Kind = Enum.Parse<TemplateKind>(value), Visual = null,
+                Motion = value == "Diagram" ? scene.Motion : null },
+            "clear-motion" => scene with { Motion = null }, _ => throw new InvalidOperationException("Unknown scene field.") };
+        Workspace.Mutate([new(MediaDraftOperationKind.UpdateScene, SelectedId, Scene: changed)], "Edited scene " + field,
+            field == "kind" ? null : $"scene:{SelectedId}:{field}");
+    });
+    void PartEdit(string value) => Act(() => Workspace.Mutate([new(MediaDraftOperationKind.UpdatePart, SelectedId, Part: SelectedPart! with { Text = value })], "Edited audio narration", $"part:{SelectedId}:text"));
+    void ItemTargetChange(ChangeEventArgs e) => Act(() => Workspace.Mutate([new(MediaDraftOperationKind.SetItemTarget, SelectedId, TargetSeconds: int.Parse(Text(e)))], "Changed item duration target"));
+    void Submit() => Act(() => { Workspace.PrepareSubmit(); submitOpen = true; });
+    async Task Generate() { var confirmation = Workspace.Confirmation; if (confirmation is null) return; await Run(() => Workspace.ConfirmSubmitAsync(confirmation)); submitOpen = false; RefreshHistory(); selectedJob = Workspace.Status?.AttemptId ?? ""; }
+    void SwitchProject(Action action)
+    {
+        var switched = false;
+        Act(() => { action(); switched = true; });
+        if (!switched) return;
+        switcher = false; sourcesOpen = false; submitOpen = false; audioTab = false;
+        chatOpen = false; chatDismissed = false; ocrSource = null; selectedArtifact = null; deletionTarget = null;
+        creating = false; creatingFrameHash = null;
+    }
+    void NewProject() => SwitchProject(Workspace.New);
+    void OpenWorkingDraft(string id) => SwitchProject(() => Workspace.OpenDraft(id));
+    async Task AttachFiles(InputFileChangeEventArgs args)
+    {
+        await Run(async () =>
+        {
+            var files = args.GetMultipleFiles(DocumentSourceStore.MaximumSources);
+            if (Workspace.Draft.Frame.Sources.Length + files.Count > DocumentSourceStore.MaximumSources)
+                throw new SourceException("source.count", "Attach at most five sources.");
+            foreach (var file in files)
+            {
+                await using var content = file.OpenReadStream(DocumentSourceStore.MaximumBytes);
+                await Workspace.AddSourceAsync(content, file.Name, file.ContentType);
+            }
+        });
+    }
+    async Task ReadLinks() => await Run(async () =>
+    {
+        foreach (var link in PendingLinks) await Workspace.ReadSourceLinkAsync(link);
+    });
+    void ReviewOcr(string id) => Act(() => { Workspace.PrepareOcr(id); sourcesOpen = false; ocrSource = id; });
+    async Task ReadPdf(string id)
+    {
+        if (Workspace.Sources.Ocr is not null) ReviewOcr(id);
+        else await Run(() => Workspace.ReadLocalPdfAsync(id));
+    }
+    async Task RunOcr(string id) { var confirmation = Workspace.OcrConfirmation!; ocrSource = null; sourcesOpen = true; await Run(() => Workspace.ConfirmOcrAsync(id, confirmation)); }
+    void OpenProject(MediaProject project) => SwitchProject(() => Workspace.Open(project));
+    void OpenArtifactSource(MediaLibraryArtifact artifact) { selectedArtifact = null; OpenProject(artifact.Project); }
+    static string ArtifactUri(MediaLibraryArtifact artifact) => $"/hybrid-result/{artifact.AttemptId}/{(artifact.Kind == "audio-master" ? "audio.wav" : "movie.mp4")}";
+    void SaveCopy(MediaLibraryArtifact artifact) => Act(() =>
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog { FileName = artifact.Kind == "audio-master" ? "audio.wav" : "video.mp4", Filter = artifact.Kind == "audio-master" ? "WAV audio|*.wav" : "MP4 video|*.mp4" };
+        if (dialog.ShowDialog() != true) return;
+        var (stream, _) = Workspace.OpenPreview(new Uri("https://0.0.0.1" + ArtifactUri(artifact)));
+        using var input = stream ?? throw new VideoException("attempt.artifact", "The selected artifact is no longer verified.");
+        using var output = System.IO.File.Create(dialog.FileName); input.CopyTo(output);
+    });
+    static string JobLabel(string status) => status switch { "running" => "Running", "cancelling" => "Cancel requested", "completed" => "Completed", "failed" => "Failed", "cancelled" => "Cancelled", "interrupted" => "Interrupted", _ => status };
+    static string JobFailure(MediaHistoryJob job) => job.Status.ErrorCode == "audio.bounds"
+        ? $"The synthesized audio exceeded this revision's approved {job.Project.Content.MaximumSeconds}-second maximum. Open the storyboard to shorten the audio script or explicitly increase the maximum in Review generation. No audio was truncated; this failed job will not restart automatically."
+        : "This run failed. Open Technical details for its error code; no automatic retry was started.";
+    public async ValueTask DisposeAsync() { Workspace.Changed -= OnChanged; Workspace.Voice.Changed -= OnChanged; stop.Cancel(); if (poll is not null) await poll; stop.Dispose(); }
+}

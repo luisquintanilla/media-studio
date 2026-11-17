@@ -1,0 +1,53 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      microsoft-extensions-ai:
+        patterns:
+          - "Microsoft.Extensions.AI*"
+          - "OpenAI"
+      agent-framework:
+        patterns:
+          - "Microsoft.Agents.AI*"
+          - "GitHub.Copilot.SDK"
+          - "AGUI.*"
+      azure:
+        patterns:
+          - "Azure.*"
+      onnx-and-speech:
+        patterns:
+          - "Microsoft.ML.OnnxRuntime*"
+          - "Microsoft.ML.Tokenizers*"
+          - "Tokenizers.HuggingFace"
+          - "Whisper.net*"
+      test:
+        patterns:
+          - "xunit*"
+          - "Microsoft.NET.Test.Sdk"
+          - "coverlet*"
+      other-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /workers/browser
+    schedule:
+      interval: weekly
+    groups:
+      browser-worker:
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"

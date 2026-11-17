@@ -1,0 +1,47 @@
+@namespace MediaStudio.App.Components
+@using Microsoft.JSInterop
+@inject Microsoft.JSInterop.IJSRuntime JS
+@inject MediaWorkspace Workspace
+<dialog @ref="dialog" class="studio-dialog" aria-label="@Title" @onclose="NativeClosed">
+    <header><h2>@Title</h2><button type="button" class="icon-button" aria-label="Close dialog" @onclick="Close">×</button></header>
+    @ChildContent
+</dialog>
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback Closed { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    Microsoft.AspNetCore.Components.ElementReference dialog;
+    bool shown;
+    int pendingHostCloses;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (shown == Open) return;
+        var opening = Open;
+        // A host close event must not clear a newly reopened dialog.
+        if (!opening) pendingHostCloses++;
+        try
+        {
+            var closed = await JS.InvokeAsync<bool>("studioDialog", dialog, opening);
+            if (!opening && !closed) pendingHostCloses--;
+            shown = opening;
+        }
+        catch (JSException error)
+        {
+            if (!opening && pendingHostCloses > 0) pendingHostCloses--;
+            Workspace.Error = "Dialog interaction failed: " + error.Message;
+        }
+        catch (JSDisconnectedException error)
+        {
+            if (!opening && pendingHostCloses > 0) pendingHostCloses--;
+            Console.Error.WriteLine("Dialog disconnected during window cleanup: " + error.Message);
+        }
+    }
+    async Task NativeClosed()
+    {
+        if (pendingHostCloses > 0) { pendingHostCloses--; return; }
+        shown = false;
+        await Closed.InvokeAsync();
+    }
+    Task Close() => Closed.InvokeAsync();
+}

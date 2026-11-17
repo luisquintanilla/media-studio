@@ -1,0 +1,24 @@
+[
+  {
+    "id": "introduction",
+    "text": "Synthetic fixture: two audible tones, not synthesized speech.",
+    "startSample": 0,
+    "endSample": 8000,
+    "pauseAfterSamples": 2000,
+    "takePath": "takes/introduction/narration.wav",
+    "takeSha256": "83f50a5d71d438d1795fed3f1507935c3daeb545e1d146d1f1b998564fd56a71",
+    "metadataPath": "takes/introduction/speech.json",
+    "metadataSha256": "986972ce2ceb7538acdd22cbac0d655dfd5a874239423aa0fdff37dd918e8bef"
+  },
+  {
+    "id": "conclusion",
+    "text": "This tests independent audio composition and exact sample clocks only.",
+    "startSample": 10000,
+    "endSample": 18000,
+    "pauseAfterSamples": 2000,
+    "takePath": "takes/conclusion/narration.wav",
+    "takeSha256": "67b547c67cf1a3dcc79d78cfe0be6b8876e75afe8b9044a7a16cecf05a6b8870",
+    "metadataPath": "takes/conclusion/speech.json",
+    "metadataSha256": "47c4287281ce00040b6bb0b2bbca7c093d5dd947f2d03661aba9740ddc925335"
+  }
+]

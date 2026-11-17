@@ -1,0 +1,211 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net11.0": {
+      "Microsoft.Extensions.AI.Abstractions": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "UYZTudmTrGykWIRzcO/TKauTx/+L/h4MYpUBODCG7aIybRVkv2y6uhVwG6UHRS6uTzRqg0K8IJprC9/QhMZGsw=="
+      },
+      "Azure.Core": {
+        "type": "Transitive",
+        "resolved": "1.53.0",
+        "contentHash": "x9c/toFMOtRrlTdFuE7rlGCVAduQzWVfKmLz5juj41zJAXEhYD5hluiUyyAEzJ6OxpBnKtiaBztzwpZITAVjtg==",
+        "dependencies": {
+          "Microsoft.Bcl.AsyncInterfaces": "10.0.3",
+          "Microsoft.Identity.Client": "4.83.1",
+          "Microsoft.Identity.Client.Extensions.Msal": "4.83.1",
+          "System.ClientModel": "1.10.0",
+          "System.Memory.Data": "10.0.3"
+        }
+      },
+      "Google.Protobuf": {
+        "type": "Transitive",
+        "resolved": "3.30.2",
+        "contentHash": "Y2aOVLIt75yeeEWigg9V9YnjsEm53sADtLGq0gLhwaXpk3iu8tYSoauolyhenagA2sWno2TQ2WujI0HQd6s1Vw=="
+      },
+      "Microsoft.Bcl.AsyncInterfaces": {
+        "type": "Transitive",
+        "resolved": "10.0.3",
+        "contentHash": "TV62UsrJZPX6gbt3c4WrtXh7bmaDIcMqf9uft1cc4L6gJXOU07hDGEh+bFQh/L2Az0R1WVOkiT66lFqS6G2NmA=="
+      },
+      "Microsoft.Extensions.Configuration": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "VQS/GkFU9oLQmXZv0AR/zluF0YAbEAoUQ5aYMqcRc2TWeKa6m2AjInAOnDhCcoWI5a6LQUCzTcl8B3DZZaPZLg=="
+      },
+      "Microsoft.Extensions.Configuration.FileExtensions": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "ViBZDt2Y7TfVIxiWG5HKfP1KHTzsxn7a31ikZSg/1mdOfGyGAPj278v63NOU+n4UqvaOR43t9MOCUfadSohjQA==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "11.0.0",
+          "Microsoft.Extensions.FileProviders.Physical": "11.0.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration.Json": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "WsNcEnVlq43lXBHAXtQg1b7job819SUf9BPtJrq44vhthL9Ijl2mkRBx5L3hIU1p2AN+wiRg47yhYj+vQxEgeQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "11.0.0",
+          "Microsoft.Extensions.Configuration.FileExtensions": "11.0.0"
+        }
+      },
+      "Microsoft.Extensions.FileProviders.Physical": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "lHezhjI8zoTpltXwNy6QMr4/6lIhbXsAYZnCrgRDNNzMHCKvh+x95mkBVXLMzs8axrw7J5Cy21K8lM5YHCfgAw==",
+        "dependencies": {
+          "Microsoft.Extensions.FileSystemGlobbing": "11.0.0"
+        }
+      },
+      "Microsoft.Extensions.FileSystemGlobbing": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "Ycwu/y22NK/ZyJpaFRJc4FB88mjOnsttk2AVHaKgEeShq0vodXZ4FJErpMM2Jju3r3t/2VYWrcHuIxj3ZT/aow=="
+      },
+      "Microsoft.Identity.Client": {
+        "type": "Transitive",
+        "resolved": "4.83.1",
+        "contentHash": "jOLIrZ3cynoqHLLO1cXplFFabrhrMEYs/EuKHvmCyrOm1axqiVFT6nCSnHxk7w5+d2BeQfCdM12Yf/0X7OeS1g==",
+        "dependencies": {
+          "Microsoft.IdentityModel.Abstractions": "8.14.0"
+        }
+      },
+      "Microsoft.Identity.Client.Extensions.Msal": {
+        "type": "Transitive",
+        "resolved": "4.83.1",
+        "contentHash": "I3k4J4Hj4KbLEFanjeUzzDOVecukETaTgEkJ7h2pP/Yazs6SLp6TVUTo/Eo+ptPXMwvc+iX7rBFtMSUrA7R+Mg==",
+        "dependencies": {
+          "Microsoft.Identity.Client": "4.83.1",
+          "System.Security.Cryptography.ProtectedData": "4.5.0"
+        }
+      },
+      "Microsoft.IdentityModel.Abstractions": {
+        "type": "Transitive",
+        "resolved": "8.14.0",
+        "contentHash": "iwbCpSjD3ehfTwBhtSNEtKPK0ICun6ov7Ibx6ISNA9bfwIyzI2Siwyi9eJFCJBwxowK9xcA1mj+jBWiigeqgcQ=="
+      },
+      "Microsoft.ML.OnnxRuntime.Managed": {
+        "type": "Transitive",
+        "resolved": "1.23.2",
+        "contentHash": "HtlQuzmVrqhnkmwfmkQ+2re8xPxtVmeLRQaYSJ3pXfzKs4b36+yBfa/LnDuzfX1bGcyWn/McKxmbY87TCAmo1Q==",
+        "dependencies": {
+          "System.Numerics.Tensors": "9.0.0"
+        }
+      },
+      "System.ClientModel": {
+        "type": "Transitive",
+        "resolved": "1.10.0",
+        "contentHash": "lBEWs54F5Y5pZ9hC+8z4S/X76957ex+DPk7WecRHlbIHtrPfbRMMlOgI3iDn4Jpb3bSxvBnKaaHoD59auFjlBA==",
+        "dependencies": {
+          "System.Memory.Data": "10.0.3"
+        }
+      },
+      "System.Memory.Data": {
+        "type": "Transitive",
+        "resolved": "10.0.3",
+        "contentHash": "MaGhRfGunmrj/nHjtsi9XkhlYJ/ERGWrbA+BiSKNtGnAjc9XlG5EhAvak6VRcX5LYzPF6pBO8nJ613dTgzabig=="
+      },
+      "System.Security.Cryptography.ProtectedData": {
+        "type": "Transitive",
+        "resolved": "4.5.0",
+        "contentHash": "wLBKzFnDCxP12VL9ANydSYhk59fC4cvOr9ypYQLPnAj48NQIhqnjdD2yhP8yEKyBJEjERWS9DisKL7rX5eU25Q=="
+      },
+      "Whisper.net.Runtime.Metal": {
+        "type": "Transitive",
+        "resolved": "1.9.0",
+        "contentHash": "HO66gX4D+vaElvmxnLaRGkyufuc8pGR6OlTwKinZAmUoN9KWG4AHA4AJHkj9ZQge95jNDZKKmQt6RE8RwAGJmA=="
+      },
+      "media.narration": {
+        "type": "Project",
+        "dependencies": {
+          "MediaStudio.Speech": "[1.0.0, )",
+          "Microsoft.Extensions.AI.Abstractions": "[11.0.0, )"
+        }
+      },
+      "mediastudio.configuration": {
+        "type": "Project",
+        "dependencies": {
+          "Azure.Identity": "[1.21.0, )",
+          "Microsoft.Extensions.Configuration.UserSecrets": "[11.0.0, )"
+        }
+      },
+      "mediastudio.speech": {
+        "type": "Project",
+        "dependencies": {
+          "MediaStudio.Configuration": "[1.0.0, )",
+          "Microsoft.Extensions.AI.Abstractions": "[11.0.0, )",
+          "Microsoft.ML.OnnxRuntime": "[1.23.2, )",
+          "Microsoft.ML.Tokenizers": "[2.0.0, )",
+          "System.Numerics.Tensors": "[11.0.0, )",
+          "Whisper.net": "[1.9.0, )",
+          "Whisper.net.Runtime": "[1.9.0, )"
+        }
+      },
+      "Azure.Identity": {
+        "type": "CentralTransitive",
+        "requested": "[1.21.0, )",
+        "resolved": "1.21.0",
+        "contentHash": "GeFv8sGwRKvDKwI2WFy8r0mhmlxEVZg24Sit2NogTjiSO8RVjllWM65OT6e1sKjOvG8V74y7hAbaELUUPjZQSw==",
+        "dependencies": {
+          "Azure.Core": "1.53.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration.UserSecrets": {
+        "type": "CentralTransitive",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "O+nOpNgplvFmnaHrehoyRkL0x/IuXLDjo1kzp2hmU4Vbxl2MEunOx2mYY5k1CH9wYVQAz0F466P756IBtHzEcQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Json": "11.0.0",
+          "Microsoft.Extensions.FileProviders.Physical": "11.0.0"
+        }
+      },
+      "Microsoft.ML.OnnxRuntime": {
+        "type": "CentralTransitive",
+        "requested": "[1.23.2, )",
+        "resolved": "1.23.2",
+        "contentHash": "849xImRO0vxDH7DNlg/FAVGExKfjN1r2CIZevZGI5JQCoOj+0T23ShqPEgu5mLTwElot5X7V0qkO0jUz/yJZbA==",
+        "dependencies": {
+          "Microsoft.ML.OnnxRuntime.Managed": "1.23.2"
+        }
+      },
+      "Microsoft.ML.Tokenizers": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2"
+        }
+      },
+      "System.Numerics.Tensors": {
+        "type": "CentralTransitive",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "thx6y1hMzB6LumB/aLcZoLHWq8wr+dbldk/FiNghyT+4ynxo9u2oCTFfb5iDMDG6hykDXLorXuaf4EPEij2BBg=="
+      },
+      "Whisper.net": {
+        "type": "CentralTransitive",
+        "requested": "[1.9.0, )",
+        "resolved": "1.9.0",
+        "contentHash": "oIDi3oa+EYQgPdAsGxEZJmheUuyHI8imN4GUE0rA2xme38uiImE8pqJNYvKsseug3+2Dp9dOud38fl159kROIA==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.0.0"
+        }
+      },
+      "Whisper.net.Runtime": {
+        "type": "CentralTransitive",
+        "requested": "[1.9.0, )",
+        "resolved": "1.9.0",
+        "contentHash": "Fl+kWm+7/EA+Q0KsYrWZlS42MHOxYVK96VpBZy0yLWMwMFwSSMiXzCxosxSm8vSVhYuqGeBK4IOOLTL9FSTsZg==",
+        "dependencies": {
+          "Whisper.net.Runtime.Metal": "1.9.0"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+VideoProduction.Decisions is optional, application-owned experimental incubation.
+It is NOT the released Microsoft.Extensions.AI decision API, or a replacement for
+Microsoft.Extensions.AI.Abstractions. No tools are activated by this project.
+
+Contract origins:
+  https://github.com/dotnet/extensions
+  Commit e87f1126cf22108fb27f6391c7826fb91c25138e
+  src/Libraries/Microsoft.Extensions.AI.Abstractions/Decisions/
+  DecisionQuestions.cs, DecisionAnswers.cs, DecisionClient.cs,
+  DecisionBinding.cs, DecisionDefinitions.cs
+  Copyright .NET Foundation and contributors; MIT (original headers retained).
+
+Provider origins:
+  https://github.com/luisquintanilla/typesafe-meai
+  Commit ce28e92b338b0edfbc22cca3c62101fa75c008f7
+  src/DecisionInference.Abstractions/{IDecisionGenerator,DecisionInput,
+    DecisionResult,DecisionClientCore}.cs
+  src/DecisionInference.Julia/{JuliaDecisionClient,JuliaDecisionGenerator,
+    JuliaDecisionGeneratorOptions,PrepareDecisionInputs,ScoreOnnxDecisionModel,
+    DecodeDecisions,PythonJson}.cs
+  src/DecisionInference.Onnx/MarkerOnnxRunner.cs
+  No standalone LICENSE or license header was present at this source pin.
+  The source repository is private and owned by this repository's owner, who
+  offers the adapted files here under this repository's MIT LICENSE.
+
+Adaptation ledger:
+  - Contract namespace moved to VideoProduction.Decisions.Experimental.
+  - Provider namespaces moved below .Generator, .Julia and .Onnx.
+  - Explicit aliases separate provider-domain decisions from contract decisions.
+  - Microsoft.Shared guards/diagnostic IDs replaced by small local adapters;
+    experimental warning is VPD001 (not an official Microsoft diagnostic).
+  - Official public MEAI UsageDetails and AdditionalPropertiesDictionary remain
+    package types, never vendored. No private Abstractions package is referenced.
+  - AIJsonUtilities defaults replaced by DecisionJsonContext explicit metadata.
+    Application state/result metadata must be supplied by each consumer.
+    No reflection serializer fallback and no global JSON settings mutation.
+  - Added explicit wire metadata context, test friend assembly, hash verifier,
+    fixed manifest identity, contract/seam tests and native-only smoke runner.
+  - LoadFromDirectory verifies the three pinned assets before any native load.
+    Explicit file/stage constructors remain lower-level caller-owned seams.
+  - CPU ONNXRuntime remains 1.23.2. The modernized closure pins MEAI Abstractions
+    11.0.0 and Tensors 11.0.0 from nuget.org; Directory.Packages.props and lock
+    files are authoritative. These supersede the earlier 10.11.0/10.0.12 closure.
+  - JuliaTokenizer.cs is new application-owned source, not a copied upstream
+    provider file. It derives from Microsoft.ML.Tokenizers.Tokenizer and uses
+    Microsoft.ML.Tokenizers 2.0.0 as its abstraction, delegating encoding/decoding
+    to Tokenizers.HuggingFace 3.23.1, retained as a production dependency. IDs,
+    token strings and scalar offsets originate in HF; scalar coordinates are
+    converted to .NET UTF-16 ranges. No BPE or byte-fallback algorithm is owned.
+    Complete encoding/counting and decoding are supported. Pipeline overrides,
+    token-index queries and truncating encoding explicitly reject.
+  - PrepareDecisionInputs stores Microsoft.ML.Tokenizers.Tokenizer; the native
+    JuliaDecisionClient also accepts that abstraction and builds the HF adapter
+    in LoadFromDirectory. Exact parity covers 48 retained fixture components,
+    all 19 decision inputs and additional added-token/mixed-input regressions.
+    The earlier bare ML BPE migration blocker remains documented separately.
+    Model assets and budgets are unchanged.
+  - Restore feed configuration is project-scoped; no global configuration edits.
+    NuGet v2 CDN / Microsoft dotnet-public mirror are alternatives when NuGet v3
+    TLS is unavailable. Restores must use packages.lock.json in locked mode.
+  - SourceHashes.txt records exact original/adapted byte SHA-256 for all 17
+    imported source files. No claim is made that adapted files are unmodified.
+  - Test-only tracing of actual Julia input batches/native logits substantiates
+    state/token framing and ordered output-to-ID mapping with six bounded
+    native sanity requests. This makes no video utility or cross-platform claim.
+
+Model (not included in source/binaries):
+  SupersonicLabs/Julia-1-ONNX
+  Revision 82a2fadf8fccfccdc5fd4e1009ba8f1a265eb7a8
+  Model card license: Apache-2.0, confirmed at the exact revision.
+  The pinned repository does not include a standalone LICENSE file.
+  https://huggingface.co/SupersonicLabs/Julia-1-ONNX/blob/82a2fadf8fccfccdc5fd4e1009ba8f1a265eb7a8/README.md
+  Exact names/hashes and canonical fingerprint: Julia/JuliaModelAssets.cs.
+  Fetch only model.onnx, model.onnx.data and tokenizer.json from that revision,
+  into an explicit cache outside the checkout; verify before loading.
+  Model probabilities are relative scores, not calibrated correctness.
+  A local decision model does not make downstream generation local.
+
+MIT License (.NET Foundation contract files)
+
+Copyright (c) .NET Foundation. All rights reserved.
+
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to
+do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

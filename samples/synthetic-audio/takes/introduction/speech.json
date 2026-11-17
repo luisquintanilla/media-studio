@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "wavPath": "narration.wav",
+  "wavSha256": "83f50a5d71d438d1795fed3f1507935c3daeb545e1d146d1f1b998564fd56a71",
+  "sampleRate": 16000,
+  "sampleCount": 8000,
+  "channels": 1,
+  "encoding": "pcm_s16le",
+  "displayText": "Synthetic fixture: two audible tones, not synthesized speech.",
+  "modelId": "synthetic-sine-fixture-v1",
+  "execution": {
+    "path": "meai-in-process-v1",
+    "abstraction": "Microsoft.Extensions.AI.ITextToSpeechClient",
+    "package": "Microsoft.Extensions.AI.Abstractions",
+    "packageVersion": "10.11.0",
+    "apiStatus": "experimental MEAI001",
+    "abstractionAssembly": {
+      "version": "10.11.0.0",
+      "sha256": "a3216886dec2b2528b2d7212c438d21c3d6de2061b500bd2ea505a41f896f8d3"
+    },
+    "client": {
+      "provider": "synthetic-fixture-not-tts",
+      "clientType": "AudioTranscriber.Tests.AudioProductionTests\u002BSyntheticToneClient",
+      "artifacts": []
+    },
+    "request": {
+      "voice": "synthetic-tone",
+      "language": "en",
+      "speed": 1
+    },
+    "cacheIdentity": "e068a3e651c8645cd13c2b09c193a9b72074db6f05197b817b9cb30dab36d53b"
+  },
+  "providerEvidence": null,
+  "timingEvidence": "whole-returned-take-sample-range-only"
+}

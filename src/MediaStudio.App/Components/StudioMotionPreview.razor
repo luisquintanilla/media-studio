@@ -1,0 +1,45 @@
+@namespace MediaStudio.App.Components
+@using VideoProduction
+@implements IAsyncDisposable
+<div class="motion-review" data-motion-preview>
+    <div style="height:390px">@((MarkupString)MotionVisuals.Svg(Motion, percent))</div>
+    <p data-motion-caption>@MotionVisuals.Caption(Motion, percent)</p>
+    <div class="actions">
+        <button data-motion-play @onclick="() => playing = !playing">@(playing ? "Pause" : "Preview animation")</button>
+        <label>Scene progress <input data-motion-seek type="range" min="0" max="100" value="@percent" @oninput="Seek" /> @percent%</label>
+    </div>
+    <p class="muted">Authored schematic, not a physical simulation. Preview progress is normalized; output timing uses the measured narration.</p>
+</div>
+@code {
+    [Parameter, EditorRequired] public MotionVisual Motion { get; set; } = null!;
+    int percent;
+    bool playing;
+    MotionVisual? previous;
+    readonly CancellationTokenSource stop = new();
+    Task? ticking;
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(previous, Motion)) { previous = Motion; percent = 0; playing = false; }
+    }
+    protected override void OnInitialized() => ticking = Tick();
+    void Seek(ChangeEventArgs args)
+    {
+        playing = false;
+        percent = int.Parse(args.Value?.ToString() ?? "0", System.Globalization.CultureInfo.InvariantCulture);
+    }
+    async Task Tick()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(80));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(stop.Token))
+                if (playing) await InvokeAsync(() => {
+                    percent++;
+                    if (percent >= 100) { percent = 100; playing = false; }
+                    StateHasChanged();
+                });
+        }
+        catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
+    }
+    public async ValueTask DisposeAsync() { stop.Cancel(); if (ticking is not null) await ticking; stop.Dispose(); }
+}

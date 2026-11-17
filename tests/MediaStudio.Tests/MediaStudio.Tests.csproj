@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Tokenizers.HuggingFace" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Copilot\fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Speech\fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MediaStudio.Agents\MediaStudio.Agents.csproj" />
+    <ProjectReference Include="..\..\src\MediaStudio.Configuration\MediaStudio.Configuration.csproj" />
+    <ProjectReference Include="..\..\src\MediaStudio.Sources\MediaStudio.Sources.csproj" />
+    <ProjectReference Include="..\..\src\MediaStudio.Speech\MediaStudio.Speech.csproj" />
+    <ProjectReference Include="..\..\src\VideoProduction.AgentFramework\VideoProduction.AgentFramework.csproj" />
+    <ProjectReference Include="..\..\src\VideoProduction.Cli\VideoProduction.Cli.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

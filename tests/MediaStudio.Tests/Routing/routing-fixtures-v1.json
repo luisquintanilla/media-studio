@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "notice": "Author-labelled routing hypotheses (expected tier), not measured generation quality or calibrated confidence.",
+  "cases": [
+    { "id": "greeting", "purpose": "chat", "prompt": "Hi! What can you do?", "expected": "fast" },
+    { "id": "rename-title", "purpose": "chat", "prompt": "Suggest a shorter title for 'Intro to sourdough baking'.", "expected": "fast" },
+    { "id": "define-term", "purpose": "chat", "prompt": "What does B-roll mean?", "expected": "fast" },
+    { "id": "fix-typo", "purpose": "chat", "prompt": "Fix the typo: 'Welcom to the show'.", "expected": "fast" },
+    { "id": "count-scenes", "purpose": "chat", "prompt": "How many scenes are in a 30 second teaser, roughly?", "expected": "fast" },
+    { "id": "caption-short", "purpose": "illustration", "prompt": "One-line caption for a picture of a lighthouse.", "expected": "fast" },
+    { "id": "json-outline", "purpose": "chat", "prompt": "Return a JSON outline of five scenes about tidal energy.", "json": true, "expected": "strong" },
+    { "id": "storyboard", "purpose": "authoring", "prompt": "Write a storyboard for a three minute explainer on how vaccines train the immune system.", "expected": "strong" },
+    { "id": "long-summary", "purpose": "chat", "prompt": "Summarize the following transcript and keep every quoted figure exact.", "padding": 7000, "expected": "strong" },
+    { "id": "tool-call", "purpose": "chat", "prompt": "Add a title scene and a diagram scene to my draft.", "tools": true, "expected": "strong" },
+    { "id": "long-output", "purpose": "chat", "prompt": "Draft a detailed narration script.", "maxOutputTokens": 8000, "expected": "strong" },
+    { "id": "document-authoring", "purpose": "document-authoring", "prompt": "Turn the attached report into a narrated summary video.", "expected": "strong" },
+    { "id": "subtle-reasoning", "purpose": "chat", "prompt": "Is it misleading to say correlation proves causation if the sample is randomized? Explain carefully.", "expected": "strong" },
+    { "id": "constraint-heavy", "purpose": "chat", "prompt": "Rewrite this intro without changing any numbers, do not add claims, keep it under 40 words.", "expected": "strong" }
+  ]
+}

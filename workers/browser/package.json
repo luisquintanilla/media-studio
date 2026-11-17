@@ -1,0 +1,9 @@
+{
+  "name": "video-production-browser-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24 <25" },
+  "dependencies": { "playwright": "1.61.0" },
+  "scripts": { "test": "node --test worker.test.mjs animation.test.mjs motion.test.mjs" }
+}

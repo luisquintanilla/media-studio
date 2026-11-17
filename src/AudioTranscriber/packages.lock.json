@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net11.0": {
+      "Microsoft.Extensions.AI.Abstractions": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "UYZTudmTrGykWIRzcO/TKauTx/+L/h4MYpUBODCG7aIybRVkv2y6uhVwG6UHRS6uTzRqg0K8IJprC9/QhMZGsw=="
+      },
+      "Whisper.net": {
+        "type": "Direct",
+        "requested": "[1.9.0, )",
+        "resolved": "1.9.0",
+        "contentHash": "oIDi3oa+EYQgPdAsGxEZJmheUuyHI8imN4GUE0rA2xme38uiImE8pqJNYvKsseug3+2Dp9dOud38fl159kROIA==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.0.0"
+        }
+      },
+      "Whisper.net.Runtime": {
+        "type": "Direct",
+        "requested": "[1.9.0, )",
+        "resolved": "1.9.0",
+        "contentHash": "Fl+kWm+7/EA+Q0KsYrWZlS42MHOxYVK96VpBZy0yLWMwMFwSSMiXzCxosxSm8vSVhYuqGeBK4IOOLTL9FSTsZg==",
+        "dependencies": {
+          "Whisper.net.Runtime.Metal": "1.9.0"
+        }
+      },
+      "Whisper.net.Runtime.Metal": {
+        "type": "Transitive",
+        "resolved": "1.9.0",
+        "contentHash": "HO66gX4D+vaElvmxnLaRGkyufuc8pGR6OlTwKinZAmUoN9KWG4AHA4AJHkj9ZQge95jNDZKKmQt6RE8RwAGJmA=="
+      }
+    }
+  }
+}

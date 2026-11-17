@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "connections": [
+    {
+      "id": "foundry",
+      "provider": "openAI",
+      "endpoint": "https://example-account.openai.azure.com/openai/v1",
+      "region": "EastUS2",
+      "authentication": "azure-cli"
+    },
+    {
+      "id": "foundry-claude",
+      "provider": "anthropic",
+      "endpoint": "https://example-account.services.ai.azure.com/anthropic",
+      "authentication": "azure-cli"
+    },
+    {
+      "id": "keyed",
+      "provider": "openAI",
+      "endpoint": "https://example-other.cognitiveservices.azure.com/openai/v1",
+      "authentication": "user-secrets"
+    },
+    {
+      "id": "ollama",
+      "provider": "openAI",
+      "endpoint": "http://localhost:11434/v1",
+      "authentication": "none"
+    }
+  ],
+  "general": { "connection": "foundry", "model": "gpt-general" },
+  "authoring": { "connection": "foundry-claude", "model": "claude-authoring" },
+  "speech": { "connection": "foundry", "model": "gpt-live-transcribe" },
+  "imageFallback": { "connection": "keyed", "model": "image" },
+  "nativeImages": true,
+  "nativeDecision": { "connection": "foundry", "model": "gpt-decisions" }
+}

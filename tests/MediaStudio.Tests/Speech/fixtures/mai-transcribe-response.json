@@ -1,0 +1,32 @@
+{
+  "durationMilliseconds": 2480,
+  "combinedPhrases": [
+    { "text": "Hello world. This is Media Studio." }
+  ],
+  "phrases": [
+    {
+      "offsetMilliseconds": 1120,
+      "durationMilliseconds": 1240,
+      "text": "This is Media Studio.",
+      "locale": "en-US",
+      "confidence": 0.93,
+      "words": [
+        { "text": "This", "offsetMilliseconds": 1120, "durationMilliseconds": 200 },
+        { "text": "is", "offsetMilliseconds": 1320, "durationMilliseconds": 160 },
+        { "text": "Media", "offsetMilliseconds": 1480, "durationMilliseconds": 360 },
+        { "text": "Studio.", "offsetMilliseconds": 1840, "durationMilliseconds": 520 }
+      ]
+    },
+    {
+      "offsetMilliseconds": 80,
+      "durationMilliseconds": 880,
+      "text": "Hello world.",
+      "locale": "en-US",
+      "confidence": 0.95,
+      "words": [
+        { "text": "Hello", "offsetMilliseconds": 80, "durationMilliseconds": 400 },
+        { "text": "world.", "offsetMilliseconds": 520, "durationMilliseconds": 440 }
+      ]
+    }
+  ]
+}

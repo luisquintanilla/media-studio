@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Tokenizers.HuggingFace" />
+    <ProjectReference Include="..\..\src\VideoProduction.Decisions\VideoProduction.Decisions.csproj" />
+  </ItemGroup>
+</Project>

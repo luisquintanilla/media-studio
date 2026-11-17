@@ -1,0 +1,15 @@
+{
+  "$comment": "Single source of truth for Foundry model deployments (plan P7.2). Loaded by modules/foundry.bicep (loadJsonContent) and scripts/Find-FoundryRegion.ps1. capacity = thousands of tokens per minute (or the RPM unit for audio/image models); lower it if `azd up` reports a quota error. enabledBy = 'always' or the name of a boolean parameter in main.bicep. Versions verified with `az cognitiveservices model list` and Microsoft Learn on 2026-11-16.",
+  "deployments": [
+    { "name": "authoring",       "role": "authoring",       "model": "gpt-6.1-sol",            "version": "2026-09-29", "format": "OpenAI",     "sku": "GlobalStandard", "capacity": 50, "enabledBy": "always" },
+    { "name": "chat",            "role": "chat",            "model": "gpt-6-luna",             "version": "2026-09-22", "format": "OpenAI",     "sku": "GlobalStandard", "capacity": 50, "enabledBy": "always" },
+    { "name": "mini",            "role": "mini",            "model": "gpt-5.4-mini",           "version": "2026-03-17", "format": "OpenAI",     "sku": "GlobalStandard", "capacity": 50, "enabledBy": "always" },
+    { "name": "embedding",       "role": "embedding",       "model": "text-embedding-3-small", "version": "1",          "format": "OpenAI",     "sku": "GlobalStandard", "capacity": 50, "enabledBy": "always" },
+    { "name": "transcribe",      "role": "transcribe",      "model": "gpt-4o-mini-transcribe", "version": "2025-12-15", "format": "OpenAI",     "sku": "GlobalStandard", "capacity": 10, "enabledBy": "deployOpenAIAudio" },
+    { "name": "transcribe-live", "role": "transcribe-live", "model": "gpt-live-transcribe",    "version": "2026-07-28", "format": "OpenAI",     "sku": "GlobalStandard", "capacity": 10, "enabledBy": "always" },
+    { "name": "tts",             "role": "tts",             "model": "gpt-4o-mini-tts",        "version": "2025-12-15", "format": "OpenAI",     "sku": "GlobalStandard", "capacity": 10, "enabledBy": "deployOpenAIAudio" },
+    { "name": "image",           "role": "image",           "model": "gpt-image-2.5-flare",    "version": "2026-09-08", "format": "OpenAI",     "sku": "GlobalStandard", "capacity": 1,  "enabledBy": "always" },
+    { "name": "ocr",             "role": "ocr",             "model": "mistral-ocr-4-0",        "version": "1",          "format": "Mistral AI", "sku": "GlobalStandard", "capacity": 1,  "enabledBy": "deployMistralOcr" },
+    { "name": "claude",          "role": "claude",          "model": "claude-sonnet-5",        "version": "2",          "format": "Anthropic",  "sku": "GlobalStandard", "capacity": 1,  "enabledBy": "deployClaude" }
+  ]
+}

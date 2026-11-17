@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "fixtureSha256": "91410fb1e0ec528208da6e097edf21f2ef8d050d10059c0623bac09398d4d329",
+  "policySha256": "96709d68b6f4996d8f89eecf3ab04197981e37538d5d1ae2b1b8bfa9b6cca9ef",
+  "datasetSha256": {
+    "visual-development-v1.json": "0288552fcbb4de577dab945740e8bac7aab5d10a8d76f376c6134302049111a2",
+    "visual-heldout-v1.json": "d77bfd0d25fbce06dda28b17df1cf3843ebbf9009eed88290468ba98fac9044f",
+    "triage-development-v1.json": "954cd15356abdf8449e4f71cad70fd3e931368881ca23999185be424fdd9d4d6",
+    "triage-heldout-v1.json": "760dd3efe6ac21b2c65855338b1f736506d3c7d03ec813f7278a07a38ab87c18"
+  }
+}

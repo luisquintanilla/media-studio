@@ -17,6 +17,14 @@ plain language, prefer the documented scripts and commands, and verify with `con
 3. First video: follow `media-studio-make-video` (render the bundled demo, then the user's own topic).
 4. Cloud is optional: only when the user asks, follow `media-studio-deploy-azure` or `media-studio-copilot`.
 
+**Worktree sessions** (the GitHub Copilot app and other tools that run each session in its own `git worktree`):
+settings, secrets, models, desktop-app projects (`%LOCALAPPDATA%\MediaStudio\studio`), Ollama and Playwright's
+Chromium are machine-wide (`%LOCALAPPDATA%`) and shared, so
+don't redo setup that `configure test` shows as working. Per checkout, and missing in a new worktree:
+`workers\browser\node_modules` (`npm ci --prefix workers/browser`), a repo-local `.dotnet\` and everything under
+`artifacts\`. Archiving the session deletes the worktree, so give the user the full path of any video or brief you
+produce and offer to copy it somewhere outside the worktree.
+
 ## Skills
 
 Task procedures live in [`.github/skills/`](.github/skills/). Load the matching `SKILL.md` before you start; if your

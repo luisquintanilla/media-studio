@@ -6,7 +6,7 @@ which defaults to keep, and when it must stop and ask you.
 
 * [What the repository gives your agent](#what-the-repository-gives-your-agent)
 * [Quick start](#quick-start)
-* [Agent setup](#agent-setup): [GitHub Copilot](#github-copilot), [Claude Code](#claude-code), [OpenAI Codex](#openai-codex), [other agents](#other-agents)
+* [Agent setup](#agent-setup): [GitHub Copilot](#github-copilot) ([CLI and IDEs](#copilot-cli-and-ides), [GitHub Copilot app](#github-copilot-app)), [Claude Code](#claude-code), [OpenAI Codex](#openai-codex), [other agents](#other-agents)
 * [Skills](#skills) and [prompt cookbook](#prompt-cookbook)
 * [What the agent asks you first](#what-the-agent-asks-you-first)
 * [Copilot cloud agent](#copilot-cloud-agent)
@@ -25,6 +25,7 @@ Media Studio itself. This page is about the coding agent you use **on the reposi
 | [`.github/skills/media-studio-*/SKILL.md`](../.github/skills/) | Copilot natively; Claude Code and Codex after [linking](#claude-code) | Twelve task skills: step-by-step procedures with exact commands, checks and pitfalls. |
 | [`.github/skills/media-explanation/SKILL.md`](../.github/skills/media-explanation/SKILL.md) | The **app** at runtime | Teaching guidance the app embeds and hash-checks. Agents may read it for writing scripts; never edit it. |
 | [`.github/workflows/copilot-setup-steps.yml`](../.github/workflows/copilot-setup-steps.yml) | Copilot cloud agent | Prepares the .NET SDK and packages before the cloud agent starts. |
+| [`.github/github-app.yml`](../.github/github-app.yml) | GitHub Copilot app | Worktree instructions and one-click scripts (restore, browser worker, start the app, check setup, build, tests). |
 
 Skills follow the open [Agent Skills](https://agentskills.io) format: a folder with a `SKILL.md` whose frontmatter has
 a `name` and a `description`. Agents read the descriptions up front and load a skill's body only when your request
@@ -37,7 +38,9 @@ The CLIs are agent-friendly too: `video-production` prints JSON on stdout and er
 
 ## Quick start
 
-1. **Clone** the repository and open a terminal in it:
+1. **Get the repository.** In the **GitHub Copilot app**, add `luisquintanilla/media-studio` as a repository (it
+   clones it for you), accept its [repository configuration](#github-copilot-app) and start a session; then skip to
+   step 3. Otherwise clone it and open a terminal in it:
 
    ```powershell
    git clone https://github.com/luisquintanilla/media-studio.git
@@ -65,15 +68,59 @@ but the models, narration and render path are documented and tested on Windows.
 
 ### GitHub Copilot
 
-Works with no extra setup in the Copilot CLI, the GitHub Copilot app, VS Code, Visual Studio and JetBrains agent
-mode, and the Copilot cloud agent. Copilot reads `.github/copilot-instructions.md`, `AGENTS.md` and the skills in
-`.github/skills`.
+Every Copilot surface reads `.github/copilot-instructions.md`, `AGENTS.md` and the skills in `.github/skills` with no
+extra setup: the GitHub Copilot app, the Copilot CLI, VS Code, Visual Studio and JetBrains agent mode, and the Copilot
+cloud agent.
 
-* Copilot CLI: `/skills` lists the skills it found; you can also name one in a prompt ("use the
-  media-studio-troubleshoot skill").
 * Don't run the link script: Copilot also reads `.claude/skills` and `.agents/skills`, so linking would list every
   skill twice.
 * Using Copilot *inside* Media Studio as a model tier is a separate opt-in: [Copilot](copilot.md).
+
+#### Copilot CLI and IDEs
+
+* Start `copilot` in the repository root, or open the folder in your IDE and pick agent mode.
+* Copilot CLI: `/skills` lists the skills it found; you can also name one in a prompt ("use the
+  media-studio-troubleshoot skill").
+
+#### GitHub Copilot app
+
+The [GitHub Copilot app](https://docs.github.com/en/copilot/how-tos/github-copilot-app) is a desktop app that runs
+agent sessions on your machine. Each session gets its **own git worktree** (an isolated checkout on its own branch),
+so several sessions can work in parallel without touching each other or your main clone.
+
+1. **Add the repository** in the app (clone `luisquintanilla/media-studio`, or add your existing clone).
+2. **Review and accept the repository configuration.** The app finds [`.github/github-app.yml`](../.github/github-app.yml)
+   and applies nothing from it until you accept. Read the commands first; they only restore packages, run the
+   repository's own scripts, build and test. Nothing in it installs machine-wide software, downloads models or
+   touches Azure. If the file changes in a later pull, the app asks you again.
+3. **Start a session** and ask in your own words, for example "Set up Media Studio locally on this machine". The app
+   loads the same instructions and skills as the CLI.
+
+What the configuration adds:
+
+| Script | When | What it runs |
+|---|---|---|
+| Restore packages | Automatically when a session is created | `dotnet restore MediaStudio.slnx --locked-mode` |
+| Install browser worker | On demand, before the first render in a session | `npm ci --prefix workers/browser` (this checkout's locked npm packages) |
+| Start Media Studio | On demand | `Start-MediaStudio.ps1`: builds and opens the desktop app (Windows) |
+| Check setup | On demand | `video-production configure test` |
+| Build (like CI) / Offline tests | On demand | The CI build and offline test commands |
+
+It also adds short instructions telling the agent how worktrees affect Media Studio.
+
+**Worktrees and your files.** Machine-wide state is shared by every session and survives archiving: settings and
+model assets in `%LOCALAPPDATA%\MediaStudio`, Ollama's models, Playwright's Chromium and installed prerequisites.
+Set up once (in any session) and every later session reuses it. Per-worktree state is not shared:
+
+* `workers\browser\node_modules`: run **Install browser worker** in each new session before rendering.
+* `artifacts\`: the rendered demo, MP4s and drafted briefs. **Archiving a session deletes its worktree**, so copy
+  videos you want to keep elsewhere first; the agent gives you the full path and offers to copy it.
+* A repo-local `.dotnet\` SDK, if you installed one in your main clone. Prefer the machine-wide .NET 11 SDK that
+  `Install-Prerequisites.ps1` installs.
+
+The Media Studio desktop app (from **Start Media Studio**) keeps its projects, drafts and generated videos in
+`%LOCALAPPDATA%\MediaStudio\studio` (or `%MEDIASTUDIO_HOME%\studio`), not in the worktree, so every session sees the
+same projects and they survive archiving. Pass `--state-root <absolute dir>` to use a different folder.
 
 ### Claude Code
 
@@ -242,4 +289,8 @@ machine-specific work (setup, models, rendering) with a local agent.
 | `ln -s` makes copies on Windows Git Bash | Use `Link-AgentSkills.ps1` on Windows, or set `MSYS=winsymlinks:nativestrict` with Developer Mode on. |
 | The agent wants to paste a key into a file | Stop it. Set `MEDIASTUDIO__CONNECTIONS__<ID>__APIKEY` yourself ([configuration](configuration.md)). |
 | The agent ran something you didn't want | Keep your agent's approval prompts on for shell commands. Local settings are in `%LOCALAPPDATA%\MediaStudio`; `configure local` rewrites them. |
+| The GitHub Copilot app ignores the repository scripts | Accept the repository configuration (`.github/github-app.yml`) when the app asks; it asks again whenever the file changes. Skills and `AGENTS.md` work without it. |
+| `plan` or `render` fails in a new app session (`Cannot find package 'playwright'`) | Each worktree needs its own browser worker: run **Install browser worker** (`npm ci --prefix workers/browser`). |
+| Videos from an archived session are gone | Archiving deletes the worktree and its `artifacts\`. Copy MP4s out before archiving. Desktop-app projects are in `%LOCALAPPDATA%\MediaStudio\studio` and are kept. |
+| `.dotnet\dotnet.exe` not found in a worktree | The repo-local SDK is only in the clone you installed it in. Install .NET 11 machine-wide (`Install-Prerequisites.ps1`). |
 | Anything else | Ask the agent to use the troubleshooting skill, or see [troubleshooting](troubleshooting.md). |

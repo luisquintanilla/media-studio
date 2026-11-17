@@ -39,7 +39,8 @@ The easiest way in is to let a coding agent do the setup while you approve each 
    cd media-studio
    copilot          # or: claude, codex
    ```
-   Claude Code and Codex users: run `.\scripts\Link-AgentSkills.ps1` once first so they find the skills.
+   **GitHub Copilot app:** add the repository, accept its configuration ([`.github/github-app.yml`](.github/github-app.yml))
+   and start a session. Claude Code and Codex users: run `.\scripts\Link-AgentSkills.ps1` once first so they find the skills.
 2. Ask:
    > Set up Media Studio locally on this machine. Show me what you'd install and download, and wait for my go-ahead.
 3. Then:

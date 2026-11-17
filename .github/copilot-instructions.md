@@ -8,7 +8,8 @@ Task-specific guidance lives in skills under `.github/skills/` (setup, first vid
 documents, speech, models, illustrations, build/test, troubleshooting). Load the matching skill before you start.
 [`AGENTS.md`](../AGENTS.md) has the skill index and first steps for a new user; people setting up an agent should read
 [`docs/coding-agents.md`](../docs/coding-agents.md). Many users are not .NET developers: explain what you are about to
-do in plain language and prefer the documented scripts and commands.
+do in plain language and prefer the documented scripts and commands. In the GitHub Copilot app every session is a git
+worktree: follow the worktree notes in `AGENTS.md` ("First steps") and in [`github-app.yml`](github-app.yml).
 
 ## Repository map
 

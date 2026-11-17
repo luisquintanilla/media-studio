@@ -20,7 +20,9 @@ Contributions made with GitHub Copilot, Claude Code, Codex or another coding age
 for every line you submit.
 
 - The agent's instructions are [`AGENTS.md`](AGENTS.md) and [`.github/copilot-instructions.md`](.github/copilot-instructions.md);
-  keep them in sync when you change a rule or a command. Task procedures are the skills in
+  keep them in sync when you change a rule or a command, together with the instructions and scripts in
+  [`.github/github-app.yml`](.github/github-app.yml) (GitHub Copilot app users must re-accept that file after every
+  change, so keep it small and safe). Task procedures are the skills in
   [`.github/skills/`](.github/skills/). Setup per agent: [coding agents](docs/coding-agents.md).
 - Ask the agent to follow the matching skill (for example `media-studio-add-provider` or `media-studio-build-test`)
   and to run the CI gates below before it says it is done.

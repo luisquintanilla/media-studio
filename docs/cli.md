@@ -114,7 +114,7 @@ MediaStudio.exe --diagnostics [summary | list | window [<output-dir>] | window-c
 
 | Option | Does |
 | --- | --- |
-| `--state-root <dir>` | Private folder for drafts and productions (absolute path). |
+| `--state-root <dir>` | Private folder for projects, drafts and productions (absolute path). Default: `%LOCALAPPDATA%\MediaStudio\studio` (`%MEDIASTUDIO_HOME%\studio` when set). |
 | `--media-config <file>` | Production configuration to use instead of the default one derived from your settings (see `configure production`); needs `--state-root`. |
 | `--source-config <file>` | Source (OCR) configuration; needs `--state-root`. |
 | `--voice-config <file>` | Enables local Whisper push-to-talk dictation. |

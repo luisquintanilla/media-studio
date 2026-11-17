@@ -77,6 +77,28 @@ public sealed partial class AgentGuidanceTests
         Assert.True(broken.Count == 0, "Broken relative links:\n" + string.Join("\n", broken));
     }
 
+    [Fact]
+    public void Copilot_app_scripts_reference_files_that_exist()
+    {
+        var config = File.ReadAllText(Path.Combine(Root, ".github", "github-app.yml"));
+        var commands = AppScriptCommand().Matches(config).Select(m => m.Groups[1].Value.Trim()).ToList();
+        Assert.NotEmpty(commands);
+        Assert.Contains("instructions:", config, StringComparison.Ordinal);
+
+        var missing = new List<string>();
+        foreach (var command in commands)
+        {
+            foreach (Match path in AppScriptPath().Matches(command))
+            {
+                var relative = path.Groups["path"].Value;
+                var full = Path.Combine(Root, relative.Replace('/', Path.DirectorySeparatorChar));
+                if (!File.Exists(full) && !Directory.Exists(full))
+                    missing.Add($"{relative} (in: {command})");
+            }
+        }
+        Assert.True(missing.Count == 0, "github-app.yml scripts reference missing paths:\n" + string.Join("\n", missing));
+    }
+
     private static Dictionary<string, string> ReadFrontmatter(string text)
     {
         var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
@@ -138,4 +160,11 @@ public sealed partial class AgentGuidanceTests
 
     [GeneratedRegex(@"\]\((?<target>[^)\s]+)(?:\s+""[^""]*"")?\)")]
     private static partial Regex MarkdownLink();
+
+    [GeneratedRegex(@"^\s*command:\s*(.+)$", RegexOptions.Multiline)]
+    private static partial Regex AppScriptCommand();
+
+    // Paths after --project, --prefix or -File, plus any *.slnx/*.ps1 argument.
+    [GeneratedRegex(@"(?:(?:--project|--prefix|-File)\s+(?<path>[^\s""]+))|(?<path>\b[\w./-]+\.(?:slnx|ps1))\b")]
+    private static partial Regex AppScriptPath();
 }

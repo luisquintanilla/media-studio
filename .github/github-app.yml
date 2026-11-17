@@ -1,0 +1,35 @@
+# GitHub Copilot app repository configuration.
+# Reference: https://docs.github.com/copilot/reference/github-copilot-app-reference/repository-configuration
+# The app applies this file only after you review and accept it. Every command below is a repository script or a
+# dotnet/npm command; none of them installs machine-wide software, downloads models or touches Azure.
+
+instructions: |
+  You are running in the GitHub Copilot app. Each session is its own git worktree of this repository, and
+  archiving the session deletes that worktree.
+  - Machine-wide state is shared by every session: settings, secrets and model assets under
+    %LOCALAPPDATA%\MediaStudio, desktop-app projects and videos under %LOCALAPPDATA%\MediaStudio\studio, Ollama
+    models, Playwright's Chromium and installed prerequisites. Don't repeat
+    setup that `configure test` already reports as working.
+  - Per-worktree state is not shared: `workers\browser\node_modules` (run the "Install browser worker" script, or
+    `npm ci --prefix workers/browser`, before `plan` or `render` in a new session), build output, and
+    everything under `artifacts\`.
+  - Rendered videos, drafted briefs and scripts under `artifacts\` are deleted with the session. Tell the user the
+    full path when you produce one, and offer to copy it to a folder outside the worktree (ask which one).
+  - The repository's scripts are buttons in the app; mention them when they help (for example "Start Media Studio"
+    or "Check setup").
+
+scripts:
+  - name: Restore packages
+    command: dotnet restore MediaStudio.slnx --locked-mode
+    triggers:
+      - session.create
+  - name: Install browser worker
+    command: npm ci --prefix workers/browser --no-audit --no-fund
+  - name: Start Media Studio
+    command: powershell -NoProfile -ExecutionPolicy Bypass -File Start-MediaStudio.ps1
+  - name: Check setup
+    command: dotnet run --project src/VideoProduction.Cli -- configure test
+  - name: Build (like CI)
+    command: dotnet build MediaStudio.slnx -c Release --no-restore -warnaserror
+  - name: Offline tests
+    command: dotnet test MediaStudio.slnx -c Release --no-build --filter "Category!=Julia&Category!=Kokoro&Category!=Whisper&Category!=Live&Category!=Copilot&Category!=LocalRuntime"

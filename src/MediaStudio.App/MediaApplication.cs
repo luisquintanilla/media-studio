@@ -16,8 +16,11 @@ internal sealed record WindowDiagnostic(string? Banner, Func<CoreWebView2, Windo
 
 public static class MediaApplication
 {
-    /// <summary>The app's default private state root (projects, attempts and the derived production setup).</summary>
-    public static string DefaultStateRoot => Path.Combine(AppContext.BaseDirectory, "private-media");
+    /// <summary>
+    /// The app's default private state root (projects, attempts and the derived production setup). It lives with the
+    /// other per-user data, outside the repository, so builds, <c>git clean</c> and deleted worktrees never remove it.
+    /// </summary>
+    public static string DefaultStateRoot => Path.Combine(MediaStudio.Configuration.MediaStudioPaths.Root, "studio");
 
     public static int Run(HybridOptions options) => Run(options, null);
 

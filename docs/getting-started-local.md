@@ -120,7 +120,8 @@ When no settings file exists, the app opens the setup wizard:
 
 If you ran `Setup-LocalModels.ps1`, the settings already exist and the wizard is skipped. You can reopen it
 from Settings. Then create a project: add notes or a PDF as sources, ask the assistant for a storyboard,
-and review and edit the scenes. See the [product tour](media-studio-product.md).
+and review and edit the scenes. See the [product tour](media-studio-product.md). Projects, drafts and generated
+videos are kept in `%LOCALAPPDATA%\MediaStudio\studio` (`--state-root <absolute dir>` picks another folder).
 
 ## 5. Render your first video
 

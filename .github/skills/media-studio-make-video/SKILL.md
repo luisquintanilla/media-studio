@@ -38,6 +38,12 @@ A ❌ row prints its fix. Missing pieces usually mean setup has not run: use ski
 (`Install-Prerequisites.ps1`, then `Setup-LocalModels.ps1`). Both install software or download gigabytes, so
 confirm with the user before running them.
 
+**In a git worktree** (each GitHub Copilot app session is one): models, settings and Playwright's Chromium are
+machine-wide and already there if `configure test` passes, so don't rerun setup. The browser worker's packages are
+per checkout: if `configure production` flags the browser worker, or `workers\browser\node_modules\playwright` is
+missing, run `npm ci --prefix workers/browser --no-audit --no-fund` (the app's **Install browser worker** script).
+That only restores this repository's locked npm packages.
+
 ## A. Render the bundled demo (local)
 
 1. Write `artifacts\local-tools.json` (`artifacts\` is ignored by git):
@@ -80,6 +86,10 @@ confirm with the user before running them.
 `--profile preview` is for a quick look; `candidate` (the default) produces a release candidate that still needs
 human review.
 
+Give the user the **full** path of the movie. `artifacts\` lives in this checkout: in a worktree session (GitHub
+Copilot app and similar) it is deleted when the session is archived, so offer to copy the MP4, and any brief you
+drafted, to a folder the user picks (for example their Videos folder).
+
 ## B. The user's own topic
 
 1. **Draft the brief and script.** Read [`media-explanation`](../../../.github/skills/media-explanation/SKILL.md) and follow it: learning
@@ -88,6 +98,8 @@ human review.
    show it to the user. `media-explanation` is read-only for you: the app embeds and hash-checks it, so never edit it.
 2. **Start the app** with `.\Start-MediaStudio.ps1` and tell the user to create a project, paste the brief, add their
    notes or PDF and ask for a storyboard. The app's authoring agent proposes typed edits the user accepts or rejects.
+   App projects and generated videos live in `%LOCALAPPDATA%\MediaStudio\studio`, outside the checkout, so they
+   survive a worktree session being archived.
 3. **Generate** is the user's click. If it reports something missing, it names the command to run; run it after
    confirming with the user, then let them retry.
 
@@ -108,8 +120,9 @@ PDFs are read locally by default (PdfPig or the local vision model). Cloud extra
 * `narrate` fails: the Kokoro asset or eSpeak NG is missing. Run
   `dotnet run --project src/VideoProduction.Cli -- assets ensure` (downloads the assets for the configured tier) and
   install eSpeak NG (skill `media-studio-speech`).
-* `plan` fails with `Cannot find package 'playwright'`: rerun `.\scripts\Install-Prerequisites.ps1` (it runs `npm ci`
-  and `npx playwright install chromium` in `workers\browser`).
+* `plan` fails with `Cannot find package 'playwright'`: in a new worktree run
+  `npm ci --prefix workers/browser --no-audit --no-fund`; on a fresh machine rerun `.\scripts\Install-Prerequisites.ps1`
+  (it runs `npm ci` and `npx playwright install chromium` in `workers\browser`).
 * `ffmpeg` not found: install it and reopen the terminal so `PATH` refreshes.
 * Full in-app renders are not verified live in this preview. If one fails, collect
   `dotnet run --project src/VideoProduction.Cli -- diagnostics` (no secrets) and use skill `media-studio-troubleshoot`.

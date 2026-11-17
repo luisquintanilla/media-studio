@@ -7,6 +7,11 @@ narration through Kokoro and transcription through Whisper.
 For Azure, see [getting started: Azure](getting-started-azure.md). The two can be combined: cloud tiers are
 added on top of local ones.
 
+> [!TIP]
+> Using a coding agent? Start it in the repository and ask: *"Set up Media Studio locally on this machine. Show me
+> what you'd install and download, and wait for my go-ahead."* It follows the `media-studio-setup-local` skill, which
+> runs the same steps as this guide. See [coding agents](coding-agents.md).
+
 ## Requirements
 
 | | Minimum | Recommended |

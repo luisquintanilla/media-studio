@@ -4,8 +4,11 @@ Media Studio is a **local-first** AI explainer-video studio: a Windows desktop a
 a cross-platform `video-production` CLI and the libraries behind them. Everything works offline on Ollama,
 Julia, Kokoro and Whisper. Azure AI Foundry and GitHub Copilot are optional and opt-in.
 
-Task-specific guidance lives in skills under `.github/skills/` (setup, Azure, routing, Copilot, providers,
+Task-specific guidance lives in skills under `.github/skills/` (setup, first video, Azure, routing, Copilot, providers,
 documents, speech, models, illustrations, build/test, troubleshooting). Load the matching skill before you start.
+[`AGENTS.md`](../AGENTS.md) has the skill index and first steps for a new user; people setting up an agent should read
+[`docs/coding-agents.md`](../docs/coding-agents.md). Many users are not .NET developers: explain what you are about to
+do in plain language and prefer the documented scripts and commands.
 
 ## Repository map
 
@@ -24,7 +27,7 @@ documents, speech, models, illustrations, build/test, troubleshooting). Load the
 | `tests/` | `MediaStudio.Tests`, `AudioTranscriber.Tests` (xUnit) and three console-runner suites |
 | `assets/model-manifest.json` | Pinned local model assets, Ollama tier tags, cloud voice ids |
 | `infra/` | `azd` Bicep for one Foundry resource; `infra/models.json` lists every cloud deployment |
-| `scripts/` | `Install-Prerequisites`, `Setup-LocalModels` (PowerShell and bash) |
+| `scripts/` | `Install-Prerequisites`, `Setup-LocalModels`, `Link-AgentSkills` (PowerShell and bash) |
 | `docs/` | User and contributor docs; `docs/implementation-notes.md` records what was actually built and every deviation |
 
 ## Build and test
@@ -89,6 +92,20 @@ documents, speech, models, illustrations, build/test, troubleshooting). Load the
 6. **Do not edit `.github/skills/media-explanation/SKILL.md`.** The app hash-checks it at runtime.
 7. Experimental APIs (`AIRoutingChat`, `MEAI001`, `VPD001`, `GHCP001`, ...) are pinned; when you bump them, re-run the
    tests named in the relevant skill.
+
+## Ask the user first
+
+Get an explicit yes before you:
+
+* install software (`scripts/Install-Prerequisites.ps1`, winget, apt, brew); show `-WhatIf` output first;
+* download models (`scripts/Setup-LocalModels.ps1`, `ollama pull`, `assets ensure`); show `-DryRun` first;
+* run `azd up` / `azd provision` (billable), `azd down` (destructive; `--purge` is permanent) or `azd pipeline config`;
+* turn on `privacy.allowCloud`, `--cloud-speech` or a cloud document extractor;
+* start a GitHub Copilot sign-in (the user completes the device code; it may use premium requests);
+* run `approve` or press Generate in the app: these are human review gates, so pass the user's name, never your own;
+* push, open pull requests or delete files you did not create.
+
+Never ask for, accept, print or commit keys, tokens or passwords. Ask for `diagnostics` output, not the settings file.
 
 ## Commits and pull requests
 

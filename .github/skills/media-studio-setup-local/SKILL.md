@@ -14,6 +14,15 @@ Local is the default and needs no cloud account. Settings are written to
 `%LOCALAPPDATA%\MediaStudio\settings\model-providers.json` and models to `%LOCALAPPDATA%\MediaStudio\models`
 (override the root with `MEDIASTUDIO_HOME`). User guide: [getting-started-local](../../../docs/getting-started-local.md).
 
+## Ask the user first
+
+* **Installing software** (`Install-Prerequisites.ps1`, winget, apt/brew): run it with `-WhatIf` first, show what it
+  would install, and get a yes.
+* **Downloading models** (`Setup-LocalModels.ps1`, `ollama pull`, `assets ensure`): several GB. Run `-DryRun` first,
+  tell the user the tier and the download list, and get a yes. Don't pass `-Yes` unless they agreed.
+* **Picking a tier**: suggest one from `configure local`'s hardware detection, but let the user choose.
+* Never turn on `privacy.allowCloud` as part of local setup.
+
 ## 1. Prerequisites
 
 ```powershell

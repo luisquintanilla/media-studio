@@ -14,6 +14,24 @@ Thanks for helping improve Media Studio. Issues and pull requests are welcome.
 - Node.js 24 for the browser worker tests.
 - For running videos locally: the tools from [getting started (local)](docs/getting-started-local.md#1-install-prerequisites).
 
+## Working with a coding agent
+
+Contributions made with GitHub Copilot, Claude Code, Codex or another coding agent are welcome; you are responsible
+for every line you submit.
+
+- The agent's instructions are [`AGENTS.md`](AGENTS.md) and [`.github/copilot-instructions.md`](.github/copilot-instructions.md);
+  keep them in sync when you change a rule or a command. Task procedures are the skills in
+  [`.github/skills/`](.github/skills/). Setup per agent: [coding agents](docs/coding-agents.md).
+- Ask the agent to follow the matching skill (for example `media-studio-add-provider` or `media-studio-build-test`)
+  and to run the CI gates below before it says it is done.
+- Review the diff yourself, especially anything touching `CloudGuard`, `privacy.allowCloud`, upload consent, settings
+  or `infra/`. Don't let an agent paste keys, endpoints or `azd env get-values` output into files.
+- When a change alters how a task is done, update the skill in the same pull request. Skill rules (frontmatter,
+  descriptions, links) are in [writing or changing a skill](docs/coding-agents.md#writing-or-changing-a-skill) and
+  are checked by `AgentGuidanceTests`. Never edit `.github/skills/media-explanation/SKILL.md`.
+- Issues are good tasks for the Copilot cloud agent when they don't need local models or the Windows app;
+  [`copilot-setup-steps.yml`](.github/workflows/copilot-setup-steps.yml) prepares its environment.
+
 ## Build and test
 
 ```powershell
@@ -70,6 +88,7 @@ version, run `dotnet restore MediaStudio.slnx --force-evaluate` and commit the u
 | `models-nightly.yml` | Nightly and on demand | Downloads the pinned model assets, installs eSpeak NG, runs the `Julia`, `Kokoro` and `Whisper` tests |
 | `azure-dev.yml` | On demand, and on pushes to `main` that change `infra/` | `azd provision` with GitHub OIDC (no stored secrets) |
 | `live-smoke.yml` | On demand | Imports the azd outputs (`configure azd`), runs `configure test --cloud-only` and the `Live` tests |
+| `copilot-setup-steps.yml` | When it changes, on demand, and before each Copilot cloud agent session | Installs the .NET SDK, restores and builds the cross-platform projects for the agent |
 
 The Azure workflows need these **repository variables**; without them they skip with a notice:
 `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_ENV_NAME`, `AZURE_LOCATION`.

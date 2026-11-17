@@ -26,6 +26,28 @@ It is a .NET 11 sample built on [Microsoft.Extensions.AI](https://learn.microsof
 - **Deterministic rendering.** A pinned headless browser and FFmpeg render frame-exact,
   loudness-checked H.264/AAC video. See [contracts](docs/contracts.md).
 - **Optional GitHub Copilot** as an extra chat tier or agent runtime. See [Copilot](docs/copilot.md).
+- **Coding-agent ready.** `AGENTS.md` and twelve task skills let GitHub Copilot, Claude Code or Codex set up,
+  run, fix and extend the studio for you. See [coding agents](docs/coding-agents.md).
+
+## Quickstart with a coding agent (recommended)
+
+The easiest way in is to let a coding agent do the setup while you approve each step.
+
+1. Clone the repository and start your agent in it (GitHub Copilot CLI or VS Code agent mode, Claude Code, Codex, ...):
+   ```powershell
+   git clone https://github.com/luisquintanilla/media-studio.git
+   cd media-studio
+   copilot          # or: claude, codex
+   ```
+   Claude Code and Codex users: run `.\scripts\Link-AgentSkills.ps1` once first so they find the skills.
+2. Ask:
+   > Set up Media Studio locally on this machine. Show me what you'd install and download, and wait for my go-ahead.
+3. Then:
+   > Render the demo video and give me the path to the MP4.
+
+The agent follows the repository's skills and asks before it installs software, downloads models, creates Azure
+resources or turns on cloud features. Agent setup, more prompts and guardrails: [coding agents](docs/coding-agents.md).
+Prefer to do it by hand? Use Quickstart A or B below.
 
 ## Quickstart A: fully local (no cloud account)
 
@@ -117,6 +139,7 @@ Everything has a local default. Cloud is off until you allow it (`privacy.allowC
 | [Product tour](docs/media-studio-product.md) | [Routing](docs/routing.md) |
 | [Troubleshooting](docs/troubleshooting.md) | [Speech](docs/speech.md), [Documents](docs/documents.md), [Illustrations](docs/illustrations.md) |
 | [Contributing](CONTRIBUTING.md) | [GitHub Copilot](docs/copilot.md) |
+| [Coding agents and skills](docs/coding-agents.md) | |
 
 Deeper production references: [project contracts](docs/contracts.md),
 [file production](docs/file-production.md), [transcription](docs/transcription.md),
@@ -133,7 +156,7 @@ Deeper production references: [project contracts](docs/contracts.md),
 | `src/VideoProduction.*` | Rendering engine, model providers, decisions, the `video-production` CLI |
 | `src/audio-transcriber`, `src/AudioTranscriber` | The `audio-transcriber` CLI and its library |
 | `infra/`, `azure.yaml` | Bicep and azd hooks for one Foundry resource |
-| `scripts/` | Prerequisite and local-model setup scripts |
+| `scripts/` | Prerequisite, local-model and agent-skill setup scripts |
 | `tests/` | xUnit and console test runners |
 
 ## Known limitations

@@ -17,3 +17,7 @@ artifacts/
 .vscode/
 *.swp
 .DS_Store
+
+# Opt-in agent skill links (scripts/Link-AgentSkills.ps1); the skills live in .github/skills
+.claude/skills/
+.agents/skills/

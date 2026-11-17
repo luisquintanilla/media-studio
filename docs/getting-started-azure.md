@@ -8,6 +8,11 @@ needs it. To run without Azure, see [getting started: local](getting-started-loc
 > The Bicep template builds and the hooks are tested locally, but a full `azd up` has not yet been verified
 > end to end. Please report problems; see [known limitations](troubleshooting.md#known-limitations).
 
+> [!TIP]
+> Using a coding agent? Ask: *"Deploy Media Studio's Azure resources with azd. Find a region that has the models,
+> tell me the cost, and wait for my go-ahead before azd up."* It follows the `media-studio-deploy-azure` skill and
+> asks before anything billable or destructive. See [coding agents](coding-agents.md).
+
 ## Requirements
 
 - An Azure subscription where you can create resources and **role assignments** (Owner, or Contributor plus

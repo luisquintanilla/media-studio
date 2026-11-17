@@ -21,6 +21,13 @@ Code: `src/MediaStudio.Speech/` (`SpeechClientFactory.cs`, `Kokoro/`, `Azure/`, 
 `foundry-openai` exists only for `speech.live` (push-to-talk dictation; needs `connection` and `deployment`). Cloud
 narration and transcription use `azure-speech`.
 
+## Ask the user first
+
+* **Cloud speech** (`azure-speech`, MAI voices, `configure azd --cloud-speech`) sends narration text and recorded
+  audio to Azure and is billed per use. Only switch to it when the user asks; local Kokoro and Whisper stay the default.
+* **Installing eSpeak NG** or **downloading Kokoro/Whisper assets** installs software or downloads hundreds of MB.
+  Confirm first.
+
 ## Local (default, offline)
 
 ```powershell

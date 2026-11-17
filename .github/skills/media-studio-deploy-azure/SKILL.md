@@ -17,6 +17,17 @@ Files: `azure.yaml`, `infra/main.bicep`, `infra/main.parameters.json`, `infra/mo
 `infra/modules/foundry.bicep`, `infra/modules/role-assignments.bicep`, hooks `infra/hooks/preprovision.ps1` / `.sh` and
 `infra/hooks/postprovision.ps1` / `.sh`.
 
+## Ask the user first
+
+* **`azd auth login` / `az login`**: the user signs in themselves. Never ask for or handle passwords, keys or tokens.
+* **`azd up` / `azd provision`** creates billable Azure resources in the user's subscription. Confirm the
+  subscription, region and the features toggled in step 3 before running it.
+* **`azd down`** deletes the resources, and `--purge` makes that permanent. Only run it when the user explicitly asks.
+* **`configure azd`** sets `privacy.allowCloud` to `true`, and `--cloud-speech` sends narration text and audio to
+  Azure. Say so before running it.
+* **`azd pipeline config`** creates an Entra app registration and federated credentials. Confirm first.
+* Never paste `azd env get-values` output, endpoints, subscription or tenant ids into issues, docs or commits.
+
 ## 1. Prerequisites
 
 `azd` and `az` (Bicep) installed, then `azd auth login` (and `az login` for the hooks). The signed-in principal gets

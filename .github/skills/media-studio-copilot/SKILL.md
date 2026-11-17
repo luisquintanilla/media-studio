@@ -21,6 +21,15 @@ Backends: `subscription` (user's own GitHub account, any plan incl. Free within 
 `privacy.allowCloud`) or `byok` (the Copilot agent on an `openai-compatible` or `foundry` connection, no GitHub
 sign-in). Docs: [copilot](../../../docs/copilot.md). Code: `src/MediaStudio.Agents/Copilot/`.
 
+## Ask the user first
+
+* **Sign-in** is a GitHub device-code flow that the user completes in their own browser. Show them the code and URL;
+  never ask for, store or paste a GitHub token.
+* **Cost**: Copilot-subscription models may use the user's premium requests. Mention it before you enable the tier or
+  the runtime.
+* **Cloud**: the `subscription` backend needs `privacy.allowCloud`. Ask before turning it on.
+* `Copilot` tests need `COPILOT_GITHUB_TOKEN` set by the user in their own shell. Never write it to a file.
+
 ## Connect
 
 **In the app (preferred):** Settings → Setup → "GitHub Copilot (optional)…". Sign-in uses the GitHub device flow

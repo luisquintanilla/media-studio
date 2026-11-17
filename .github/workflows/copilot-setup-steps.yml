@@ -1,0 +1,54 @@
+# Prepares the environment for the GitHub Copilot cloud agent (the agent that works on issues and pull requests in
+# GitHub Actions). Copilot runs the `copilot-setup-steps` job before it starts; only steps, permissions, runs-on,
+# services, snapshot and timeout-minutes are used. It takes effect from the default branch. The job also runs on
+# changes to this file so it is validated like any other workflow. See docs/coding-agents.md#copilot-cloud-agent.
+#
+# The cloud agent runs on Linux: it can restore, build and work on the cross-platform projects below, but not the
+# Windows-only WPF app (MediaStudio.App), and there are no local models, Ollama, FFmpeg or Azure credentials.
+name: Copilot setup steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      # Same project list as the Linux job in ci.yml.
+      - name: Restore and build (cross-platform projects)
+        run: |
+          set -euo pipefail
+          for project in \
+            src/VideoProduction.Cli/VideoProduction.Cli.csproj \
+            src/audio-transcriber/audio-transcriber.csproj \
+            src/MediaStudio.Agents/MediaStudio.Agents.csproj \
+            src/MediaStudio.Sources/MediaStudio.Sources.csproj \
+            src/VideoProduction.AgentFramework/VideoProduction.AgentFramework.csproj \
+            src/VideoStudio.Contracts/VideoStudio.Contracts.csproj; do
+            echo "::group::$project"
+            dotnet restore "$project" --locked-mode
+            dotnet build "$project" -c Release --no-restore
+            echo "::endgroup::"
+          done
